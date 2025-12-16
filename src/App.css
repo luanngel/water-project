@@ -1,0 +1,188 @@
+/* =========================
+   BASE
+========================= */
+body, html, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* =========================
+   APP / LAYOUT PRINCIPAL
+========================= */
+.app {
+  height: 100vh;
+}
+
+/* ESTE GRID ES EL QUE MANDA */
+.main {
+  display: grid;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  grid-template-rows: 100vh;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  transition: grid-template-columns 0.3s ease;
+}
+
+/*=========================
+   SIDEBAR
+========================= 
+.sidebar {
+  background: #1f2a48;
+  color: #e5e7eb;
+  height: 100vh;
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+  width: var(--sidebar-width);
+}
+*/
+/* TOGGLE 
+.sidebar-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 13px;
+}*/
+
+/* 
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px;
+  font-size: 18px;
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.sidebar-item:hover {
+  background: rgba(255,255,255,0.08);
+}
+*/
+/* SUBMENU 
+.sidebar-submenu {
+  display: flex;
+  flex-direction: column;
+  padding-left: 34px;
+}
+
+.sidebar-submenu button {
+  padding: 5px 8px;
+  font-size: 15px;
+  background: transparent;
+  border: none;
+  color: #cbd5e1;
+  cursor: pointer;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.sidebar-submenu button:hover {
+  background: rgba(255,255,255,0.08);
+  color: white;
+}
+
+*/
+
+/* =========================
+   CONTENT WRAPPER
+========================= */
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* =========================
+   TOP MENU
+========================= */
+.topmenu {
+  height: 50px;
+  background: linear-gradient(90deg, #3a4f92, #2b3c6b, #374a7f, #3a4f92);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.topmenu-left,
+.topmenu-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 50%;
+}
+
+.icon-btn:hover {
+  background: rgba(255,255,255,0.15);
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 100%;
+  background: rgba(255,255,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* =========================
+   CONTENT
+========================= */
+.content {
+  flex: 1;
+  background-color: #f2f3f7;
+  border-top: 1px solid #d9dce6;
+  border-left: 1px solid #d9dce6;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+/* HOME */ /* CONTENEDOR PRINCIPAL */ 
+.home-container { 
+  height: 100%; 
+  display: flex; 
+  flex-direction: 
+  column; align-items: 
+  center; justify-content: 
+  center; padding: 5px; 
+  text-align: center; 
+}
+
+/* TÍTULO */ 
+.home-title { 
+  font-size: 32px; 
+  font-weight: bold; 
+  color: #1f2a48; 
+  margin-bottom: 10px;
+ } /* SUBTÍTULO */ 
+ .home-subtitle { 
+  font-size: 16px; 
+  color: #3a3a3a; 
+  margin-bottom: 40px; 
+}

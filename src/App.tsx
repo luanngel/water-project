@@ -3,6 +3,7 @@ import Sidebar from "./pages/Sidebar";
 import TopMenu from "./pages/TopMenu";
 import AreaManagement from "./pages/AreaManagement";
 import OperatorManagement from "./pages/OperatorManagement";
+import DeviceManagement from "./pages/DeviceManagement";
 import Home from "./pages/Home";
 
 // Tipos para las páginas que reciben subPage
@@ -22,6 +23,8 @@ export default function App() {
         return <AreaManagement subPage={subPage} />; // ahora tipado correctamente
       case "operator":
         return <OperatorManagement subPage={subPage} />; // también
+      case "device-management":
+        return <DeviceManagement subPage={subPage} />;
       default:
         return <div>Selecciona una opción</div>;
     }

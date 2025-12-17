@@ -5,6 +5,7 @@ import AreaManagement from "./pages/AreaManagement";
 import OperatorManagement from "./pages/OperatorManagement";
 import DeviceManagement from "./pages/DeviceManagement";
 import DataMonitoring from "./pages/DataMonitoring";
+import DataQuery from "./pages/DataQuery";
 import Home from "./pages/Home";
 
 // Tipos para las páginas que reciben subPage
@@ -28,6 +29,8 @@ export default function App() {
         return <DeviceManagement subPage={subPage} />;
       case "data-monitoring":
         return <DataMonitoring subPage={subPage} />;
+      case "data-query":
+        return <DataQuery subPage={subPage} />;
       default:
         return <div>Selecciona una opción</div>;
     }

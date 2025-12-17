@@ -8,10 +8,6 @@ import DataMonitoring from "./pages/DataMonitoring";
 import DataQuery from "./pages/DataQuery";
 import Home from "./pages/Home";
 
-// Tipos para las páginas que reciben subPage
-interface PageProps {
-  subPage: string;
-}
 
 export default function App() {
   const [page, setPage] = useState<string>("home");
@@ -22,11 +18,11 @@ export default function App() {
       case "home":
         return <Home />;
       case "area":
-        return <AreaManagement subPage={subPage} />; // ahora tipado correctamente
+        return <AreaManagement />;
       case "operator":
-        return <OperatorManagement subPage={subPage} />; // también
+        return <OperatorManagement />;
       case "device-management":
-        return <DeviceManagement subPage={subPage} />;
+        return <DeviceManagement />;
       case "data-monitoring":
         return <DataMonitoring subPage={subPage} />;
       case "data-query":

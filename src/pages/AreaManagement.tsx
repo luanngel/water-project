@@ -153,8 +153,14 @@ export default function AreaManagement() {
         <DataGrid
           rows={rows}
           columns={columns}
-          pageSize={5}
-          rowsPerPageOptions={[5]}
+          initialState={{
+            pagination: {
+              paginationModel: {
+                pageSize: 5,
+              },
+            },
+          }}
+          pageSizeOptions={[5]}
           sx={{ border: "none", "& .MuiDataGrid-row:hover": { backgroundColor: "rgba(0,0,0,0.03)" } }}
         />
       </div>

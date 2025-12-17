@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import MaterialTable from "@material-table/core";
 
-
 /* ================= TYPES ================= */
 interface Operator {
   id: number;
@@ -98,16 +97,16 @@ export default function OperatorManagement() {
 
   /* ================= TREE ================= */
   const toggleExpand = (id: number) => {
-    setExpandedIds(prev =>
-      prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+    setExpandedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   };
 
   const updateArea = (list: Area[]): Area[] =>
-    list.map(area => {
+    list.map((area) => {
       if (area.id === selectedArea?.id) {
         const operators = editingId
-          ? area.operators.map(op =>
+          ? area.operators.map((op) =>
               op.id === editingId ? { ...op, ...form } : op
             )
           : [...area.operators, { id: Date.now(), ...form }];
@@ -122,18 +121,17 @@ export default function OperatorManagement() {
 
   /* ================= CRUD ================= */
   const handleSave = () => {
-    setAreas(prev => {
+    setAreas((prev) => {
       const updated = updateArea(prev);
-  
+
       // 🔑 volver a apuntar al área actual actualizada
-      const refreshedArea = updated.find(
-        a => a.id === selectedArea?.id
-      ) || null;
-  
+      const refreshedArea =
+        updated.find((a) => a.id === selectedArea?.id) || null;
+
       setSelectedArea(refreshedArea);
       return updated;
     });
-  
+
     setShowModal(false);
     setEditingId(null);
     setForm(emptyOperator);
@@ -150,12 +148,12 @@ export default function OperatorManagement() {
     if (!selectedArea || !activeOperator) return;
 
     const deleteFromTree = (list: Area[]): Area[] =>
-      list.map(area => {
+      list.map((area) => {
         if (area.id === selectedArea.id) {
           return {
             ...area,
             operators: area.operators.filter(
-              op => op.id !== activeOperator.id
+              (op) => op.id !== activeOperator.id
             ),
           };
         }
@@ -165,14 +163,14 @@ export default function OperatorManagement() {
         return area;
       });
 
-    setAreas(prev => deleteFromTree(prev));
+    setAreas((prev) => deleteFromTree(prev));
     setActiveOperator(null);
   };
 
   /* ================= FILTER ================= */
   const filtered =
     selectedArea?.operators.filter(
-      op =>
+      (op) =>
         op.loginName.toLowerCase().includes(search.toLowerCase()) ||
         op.userName.toLowerCase().includes(search.toLowerCase())
     ) || [];
@@ -195,27 +193,21 @@ export default function OperatorManagement() {
         >
           {area.children && (
             <button onClick={() => toggleExpand(area.id)}>
-              {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              {expanded ? (
+                <ChevronDown size={14} />
+              ) : (
+                <ChevronRight size={14} />
+              )}
             </button>
           )}
           {area.name}
         </div>
 
         {expanded &&
-          area.children?.map(child => renderTree(child, level + 1))}
+          area.children?.map((child) => renderTree(child, level + 1))}
       </div>
     );
   };
-
-  const filteredOperators: Operator[] =
-  selectedArea?.operators.filter(op => {
-    const q = search.toLowerCase();
-    return (
-      op.loginName.toLowerCase().includes(q) ||
-      op.userName.toLowerCase().includes(q) ||
-      op.cellPhone.toLowerCase().includes(q)
-    );
-  }) || [];
 
   /* ================= UI ================= */
   return (
@@ -225,7 +217,7 @@ export default function OperatorManagement() {
         <h3 className="text-xs font-semibold text-gray-500 mb-3">
           Organizational Structure
         </h3>
-        {areas.map(a => renderTree(a))}
+        {areas.map((a) => renderTree(a))}
       </div>
 
       {/* MAIN */}
@@ -246,56 +238,50 @@ export default function OperatorManagement() {
           </div>
 
           <div className="flex items-center gap-3">
-  {/* ADD */}
-  <button
-    onClick={() => {
-      setForm(emptyOperator);
-      setEditingId(null);
-      setShowModal(true);
-    }}
-    className="flex items-center gap-2 px-4 py-2 bg-white text-[#4c5f9e] rounded-lg"
-  >
-    <Plus size={16} /> Add
-  </button>
+            {/* ADD */}
+            <button
+              onClick={() => {
+                setForm(emptyOperator);
+                setEditingId(null);
+                setShowModal(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-white text-[#4c5f9e] rounded-lg"
+            >
+              <Plus size={16} /> Add
+            </button>
 
-  {/* EDIT */}
-  <button
-    onClick={handleEdit}
-    disabled={!activeOperator}
-    className={`flex items-center gap-2 px-4 py-2 border border-white/40 rounded-lg
+            {/* EDIT */}
+            <button
+              onClick={handleEdit}
+              disabled={!activeOperator}
+              className={`flex items-center gap-2 px-4 py-2 border border-white/40 rounded-lg
       ${
-        !activeOperator
-          ? "opacity-70 cursor-not-allowed"
-          : "hover:bg-white/10"
+        !activeOperator ? "opacity-70 cursor-not-allowed" : "hover:bg-white/10"
       }`}
-  >
-    <Pencil size={16} /> Edit
-  </button>
+            >
+              <Pencil size={16} /> Edit
+            </button>
 
-  {/* DELETE */}
-  <button
-    onClick={handleDelete}
-    disabled={!activeOperator}
-    className={`flex items-center gap-2 px-4 py-2 border border-white/40 rounded-lg
+            {/* DELETE */}
+            <button
+              onClick={handleDelete}
+              disabled={!activeOperator}
+              className={`flex items-center gap-2 px-4 py-2 border border-white/40 rounded-lg
       ${
-        !activeOperator
-          ? "opacity-70 cursor-not-allowed"
-          : "hover:bg-white/10"
+        !activeOperator ? "opacity-70 cursor-not-allowed" : "hover:bg-white/10"
       }`}
-  >
-    <Trash2 size={16} /> Delete
-  </button>
+            >
+              <Trash2 size={16} /> Delete
+            </button>
 
-  {/* REFRESH */}
-  <button
-    onClick={loadData}
-    className="flex items-center gap-2 px-4 py-2 border border-white/40 rounded-lg hover:bg-white/10"
-  >
-    <RefreshCcw size={16} /> Refresh
-  </button>
-</div>
-
-
+            {/* REFRESH */}
+            <button
+              onClick={loadData}
+              className="flex items-center gap-2 px-4 py-2 border border-white/40 rounded-lg hover:bg-white/10"
+            >
+              <RefreshCcw size={16} /> Refresh
+            </button>
+          </div>
         </div>
 
         {/* SEARCH */}
@@ -303,107 +289,100 @@ export default function OperatorManagement() {
           className="bg-white rounded-lg shadow px-4 py-2 text-sm"
           placeholder="Search operator..."
           value={search}
-          onChange={e => setSearch(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
         />
 
-<MaterialTable
-  title={selectedArea?.name || "Operators"}
-  
-  columns={[
-    { title: "Login", field: "loginName" },
-    {
-      title: "Super Admin",
-      field: "isSuperAdmin",
-      render: rowData => (
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-            rowData.isSuperAdmin
-              ? "text-blue-600 border-blue-600"
-              : "text-red-600 border-red-600"
-          }`}
-        >
-          {rowData.isSuperAdmin ? "Yes" : "No"}
-        </span>
-      ),
-    },
-    {
-      title: "Status",
-      field: "isDisabled",
-      render: rowData => (
-        <span
-          className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-            rowData.isDisabled
-              ? "text-red-600 border-red-600"
-              : "text-blue-600 border-blue-600"
-          }`}
-        >
-          {rowData.isDisabled ? "Off" : "Active"}
-        </span>
-      ),
-    },
-    { title: "User", field: "userName" },
-    { title: "Phone", field: "cellPhone" },
-    { title: "Created", field: "createdAt", type: "date" },
-  ]}
-  data={filtered}
-  onRowClick={(event, rowData) => {
-    setActiveOperator(rowData as Operator);
-  }}
-  actions={[
-    {
-      icon: () => <Plus size={16} />,
-      tooltip: "Add Operator",
-      isFreeAction: true,
-      onClick: () => {
-        setForm(emptyOperator);
-        setEditingId(null);
-        setShowModal(true);
-      },
-    },
-    {
-      icon: () => <Pencil size={16} />,
-      tooltip: "Edit Operator",
-      onClick: (event, rowData) => {
-        setActiveOperator(rowData as Operator);
-        setEditingId((rowData as Operator).id);
-        setForm({ ...(rowData as Operator) });
-        setShowModal(true);
-      },
-    },
-    {
-      icon: () => <Trash2 size={16} />,
-      tooltip: "Delete Operator",
-      onClick: (event, rowData) => {
-        setActiveOperator(rowData as Operator);
-        handleDelete();
-      },
-    },
-  ]}
-  options={{
-    actionsColumnIndex: -1,
-    search: false,
-    paging: true,
-    sorting: true,
-    headerStyle: {
-      textAlign: "center",
-      fontWeight: 600,
-    },
-    cellStyle: {
-      textAlign: "center",
-    },
-    maxBodyHeight: "400px",
-    tableLayout: "fixed",
-    rowStyle: rowData => ({
-      backgroundColor:
-        activeOperator?.id === (rowData as Operator).id
-          ? "#EEF2FF"
-          : "#FFFFFF",
-    }),
-  }}
-/>
-
-
-
+        <MaterialTable
+          title={selectedArea?.name || "Operators"}
+          columns={[
+            { title: "Login", field: "loginName" },
+            {
+              title: "Super Admin",
+              field: "isSuperAdmin",
+              render: (rowData) => (
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                    rowData.isSuperAdmin
+                      ? "text-blue-600 border-blue-600"
+                      : "text-red-600 border-red-600"
+                  }`}
+                >
+                  {rowData.isSuperAdmin ? "Yes" : "No"}
+                </span>
+              ),
+            },
+            {
+              title: "Status",
+              field: "isDisabled",
+              render: (rowData) => (
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-semibold border ${
+                    rowData.isDisabled
+                      ? "text-red-600 border-red-600"
+                      : "text-blue-600 border-blue-600"
+                  }`}
+                >
+                  {rowData.isDisabled ? "Off" : "Active"}
+                </span>
+              ),
+            },
+            { title: "User", field: "userName" },
+            { title: "Phone", field: "cellPhone" },
+            { title: "Created", field: "createdAt", type: "date" },
+          ]}
+          data={filtered}
+          onRowClick={(_event, rowData) => {
+            setActiveOperator(rowData as Operator);
+          }}
+          actions={[
+            {
+              icon: () => <Plus size={16} />,
+              tooltip: "Add Operator",
+              isFreeAction: true,
+              onClick: () => {
+                setForm(emptyOperator);
+                setEditingId(null);
+                setShowModal(true);
+              },
+            },
+            {
+              icon: () => <Pencil size={16} />,
+              tooltip: "Edit Operator",
+              onClick: (_event, rowData) => {
+                setActiveOperator(rowData as Operator);
+                setEditingId((rowData as Operator).id);
+                setForm({ ...(rowData as Operator) });
+                setShowModal(true);
+              },
+            },
+            {
+              icon: () => <Trash2 size={16} />,
+              tooltip: "Delete Operator",
+              onClick: (_event, rowData) => {
+                setActiveOperator(rowData as Operator);
+                handleDelete();
+              },
+            },
+          ]}
+          options={{
+            actionsColumnIndex: -1,
+            search: false,
+            paging: true,
+            sorting: true,
+            headerStyle: {
+              textAlign: "center",
+              fontWeight: 600,
+            },
+            maxBodyHeight: "400px",
+            tableLayout: "fixed",
+            rowStyle: (rowData) => ({
+              backgroundColor:
+                activeOperator?.id === (rowData as Operator).id
+                  ? "#EEF2FF"
+                  : "#FFFFFF",
+            }),
+          }}
+        />
       </div>
 
       {/* MODAL */}
@@ -418,9 +397,7 @@ export default function OperatorManagement() {
               className="w-full border px-3 py-2 rounded"
               placeholder="Login Name"
               value={form.loginName}
-              onChange={e =>
-                setForm({ ...form, loginName: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, loginName: e.target.value })}
             />
 
             <button
@@ -437,9 +414,7 @@ export default function OperatorManagement() {
             </button>
 
             <button
-              onClick={() =>
-                setForm({ ...form, isDisabled: !form.isDisabled })
-              }
+              onClick={() => setForm({ ...form, isDisabled: !form.isDisabled })}
               className={`w-full border rounded px-3 py-2 ${
                 form.isDisabled
                   ? "text-red-600 border-red-600"
@@ -453,27 +428,21 @@ export default function OperatorManagement() {
               className="w-full border px-3 py-2 rounded"
               placeholder="User Name"
               value={form.userName}
-              onChange={e =>
-                setForm({ ...form, userName: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, userName: e.target.value })}
             />
 
             <input
               className="w-full border px-3 py-2 rounded"
               placeholder="Cell Phone"
               value={form.cellPhone}
-              onChange={e =>
-                setForm({ ...form, cellPhone: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, cellPhone: e.target.value })}
             />
 
             <input
               type="date"
               className="w-full border px-3 py-2 rounded"
               value={form.createdAt}
-              onChange={e =>
-                setForm({ ...form, createdAt: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, createdAt: e.target.value })}
             />
 
             <div className="flex justify-end gap-2 pt-3">

@@ -37,6 +37,7 @@ export default function DeviceManagement() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeDevice, setActiveDevice] = useState<Device | null>(null);
+  const [selectedRows, setSelectedRows] = useState<Device[]>([]);
   const [loading, setLoading] = useState(false);
 
   const emptyDevice: Omit<Device, "id"> = {
@@ -70,6 +71,7 @@ export default function DeviceManagement() {
       const data: ApiResponse = await response.json();
       setDevices(data.records);
       setActiveDevice(null);
+      setSelectedRows([]);
     } catch (error) {
       console.error("Error loading devices:", error);
       const mockData: Device[] = [
@@ -115,6 +117,7 @@ export default function DeviceManagement() {
         },
       ];
       setDevices(mockData);
+      setSelectedRows([]);
     } finally {
       setLoading(false);
     }
@@ -152,12 +155,17 @@ export default function DeviceManagement() {
   };
 
   const handleDelete = () => {
-    if (!activeDevice) return;
+    if (selectedRows.length === 0) return;
 
-    if (confirm("¿Deseas eliminar este dispositivo?")) {
+    const message = selectedRows.length === 1
+      ? "¿Deseas eliminar este dispositivo?"
+      : `¿Deseas eliminar ${selectedRows.length} dispositivos?`;
+
+    if (confirm(message)) {
       setDevices((prev) =>
-        prev.filter((device) => device.id !== activeDevice.id)
+        prev.filter((device) => !selectedRows.some(selected => selected.id === device.id))
       );
+      setSelectedRows([]);
       setActiveDevice(null);
     }
   };
@@ -203,20 +211,25 @@ export default function DeviceManagement() {
 
             <button
               onClick={handleEdit}
-              disabled={!activeDevice}
+              disabled={selectedRows.length !== 1}
               className={`flex items-center gap-2 px-4 py-2 border border-white/40 rounded-lg
-      ${!activeDevice ? "opacity-70 cursor-not-allowed" : "hover:bg-white/10"}`}
+      ${
+        selectedRows.length !== 1 ? "opacity-70 cursor-not-allowed" : "hover:bg-white/10"
+      }`}
             >
               <Pencil size={16} /> Edit
             </button>
 
             <button
               onClick={handleDelete}
-              disabled={!activeDevice}
+              disabled={selectedRows.length === 0}
               className={`flex items-center gap-2 px-4 py-2 border border-white/40 rounded-lg
-      ${!activeDevice ? "opacity-70 cursor-not-allowed" : "hover:bg-white/10"}`}
+      ${
+        selectedRows.length === 0 ? "opacity-70 cursor-not-allowed" : "hover:bg-white/10"
+      }`}
             >
-              <Trash2 size={16} /> Delete
+              <Trash2 size={16} />
+              {selectedRows.length > 0 ? `Delete (${selectedRows.length})` : "Delete"}
             </button>
 
             <button
@@ -236,7 +249,7 @@ export default function DeviceManagement() {
         />
 
         <MaterialTable
-          title="Devices"
+          title={`Devices ${selectedRows.length > 0 ? `(${selectedRows.length} selected)` : ""}`}
           columns={[
             { title: "Area Name", field: "Area Name" },
             { title: "Account Number", field: "Account Number" },
@@ -275,8 +288,11 @@ export default function DeviceManagement() {
             },
           ]}
           data={filteredDevices}
-          onRowClick={(_event, rowData) => {
-            setActiveDevice(rowData as Device);
+          onSelectionChange={(rows) => {
+            const selectedDevices = rows as Device[];
+            setSelectedRows(selectedDevices);
+            // Set active device to the first selected item for editing
+            setActiveDevice(selectedDevices.length > 0 ? selectedDevices[0] : null);
           }}
           actions={[
             {
@@ -303,18 +319,13 @@ export default function DeviceManagement() {
             search: false,
             paging: true,
             sorting: true,
+            selection: true,
             headerStyle: {
               textAlign: "center",
               fontWeight: 600,
             },
             maxBodyHeight: "500px",
             tableLayout: "fixed",
-            rowStyle: (rowData) => ({
-              backgroundColor:
-                activeDevice?.id === (rowData as Device).id
-                  ? "#EEF2FF"
-                  : "#FFFFFF",
-            }),
           }}
           isLoading={loading}
         />

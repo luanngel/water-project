@@ -2,16 +2,27 @@ import { Cpu, Settings, BarChart3, Bell } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 export default function Home() {
+  // Datos de ejemplo para empresas
   const companies = [
     { name: "Empresa A", tomas: 12, alerts: 2, consumption: 320 },
     { name: "Empresa B", tomas: 8, alerts: 0, consumption: 210 },
     { name: "Empresa C", tomas: 15, alerts: 1, consumption: 450 },
   ];
 
+  // Alertas recientes
   const alerts = [
     { company: "Empresa A", type: "Fuga", time: "Hace 2 horas" },
     { company: "Empresa C", type: "Consumo alto", time: "Hace 5 horas" },
     { company: "Empresa B", type: "Inactividad", time: "Hace 8 horas" },
+  ];
+
+  // Historial tipo Google
+  const history = [
+    { user: "GRH", action: "Creó un nuevo medidor", target: "SN001", time: "Hace 5 minutos" },
+    { user: "CESPT", action: "Actualizó concentrador", target: "Planta 1", time: "Hace 20 minutos" },
+    { user: "GRH", action: "Eliminó un usuario", target: "Juan Pérez", time: "Hace 1 hora" },
+    { user: "CESPT", action: "Creó un payload", target: "Payload 12", time: "Hace 2 horas" },
+    { user: "GRH", action: "Actualizó medidor", target: "SN002", time: "Hace 3 horas" },
   ];
 
   return (
@@ -75,6 +86,24 @@ export default function Home() {
             </BarChart>
           </ResponsiveContainer>
         </div>
+      </div>
+
+      {/* Historial tipo Google */}
+      <div className="bg-white rounded-xl shadow p-6">
+        <h2 className="text-lg font-semibold mb-4">Historial Reciente</h2>
+        <ul className="divide-y divide-gray-200 max-h-60 overflow-y-auto">
+          {history.map((h, i) => (
+            <li key={i} className="py-2 flex items-start gap-3">
+              <span className="text-gray-400 mt-1">•</span>
+              <div className="flex-1">
+                <p className="text-sm text-gray-700">
+                  <span className="font-semibold">{h.user}</span> {h.action} <span className="font-medium">{h.target}</span>
+                </p>
+                <p className="text-xs text-gray-400">{h.time}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* Últimas alertas */}

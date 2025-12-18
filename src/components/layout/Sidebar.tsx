@@ -6,11 +6,18 @@ import {
   ExpandMore,
   ExpandLess,
   Menu,
+  People,
+  Key
 } from "@mui/icons-material";
 
-export default function Sidebar({ setPage }: any) {
+interface SidebarProps {
+  setPage: (page: string) => void;
+}
+
+export default function Sidebar({ setPage }: SidebarProps) {
   const [systemOpen, setSystemOpen] = useState(true);
   const [waterOpen, setWaterOpen] = useState(true);
+  const [usersOpen, setUsersOpen] = useState(true); // Nuevo
   const [pinned, setPinned] = useState(false);
   const [hovered, setHovered] = useState(false);
 
@@ -34,7 +41,6 @@ export default function Sidebar({ setPage }: any) {
         >
           <Menu />
         </button>
-
         {isExpanded && (
           <span className="text-lg font-bold text-white whitespace-nowrap">
             Water System
@@ -57,7 +63,7 @@ export default function Sidebar({ setPage }: any) {
             </button>
           </li>
 
-          {/* SYSTEM SETTINGS */}
+          {/* PROJECT MANAGEMENT */}
           <li>
             <button
               onClick={() => isExpanded && setSystemOpen(!systemOpen)}
@@ -66,9 +72,7 @@ export default function Sidebar({ setPage }: any) {
               <Settings className="w-5 h-5 shrink-0" />
               {isExpanded && (
                 <>
-                  <span className="ml-3 flex-1 text-left">
-                    System Settings
-                  </span>
+                  <span className="ml-3 flex-1 text-left">Project Management</span>
                   {systemOpen ? <ExpandLess /> : <ExpandMore />}
                 </>
               )}
@@ -78,25 +82,25 @@ export default function Sidebar({ setPage }: any) {
               <ul className="mt-1 space-y-1 text-xs">
                 <li>
                   <button
-                    onClick={() => setPage("area")}
+                    onClick={() => setPage("concentrators")}
                     className="pl-10 w-full text-left px-2 py-1.5 rounded-md hover:bg-white/10"
                   >
-                    Area Management
+                    Concentradores
                   </button>
                 </li>
                 <li>
                   <button
-                    onClick={() => setPage("operator")}
+                    onClick={() => setPage("meters")}
                     className="pl-10 w-full text-left px-2 py-1.5 rounded-md hover:bg-white/10"
                   >
-                    Operator Management
+                    Medidores
                   </button>
                 </li>
               </ul>
             )}
           </li>
 
-          {/* WATER METER SYSTEM */}
+          {/* WATER METER SYSTEM 
           <li>
             <button
               onClick={() => isExpanded && setWaterOpen(!waterOpen)}
@@ -105,9 +109,7 @@ export default function Sidebar({ setPage }: any) {
               <WaterDrop className="w-5 h-5 shrink-0" />
               {isExpanded && (
                 <>
-                  <span className="ml-3 flex-1 text-left">
-                    Water Meter System Management
-                  </span>
+                  <span className="ml-3 flex-1 text-left">Water Meter System Management</span>
                   {waterOpen ? <ExpandLess /> : <ExpandMore />}
                 </>
               )}
@@ -135,6 +137,45 @@ export default function Sidebar({ setPage }: any) {
               </ul>
             )}
           </li>
+          *}
+
+         {/* SYSTEM USERS */}
+<li>
+  <button
+    onClick={() => isExpanded && setUsersOpen(!usersOpen)}
+    className="flex items-center w-full px-2 py-2 rounded-md hover:bg-white/10 font-bold"
+  >
+    <People className="w-5 h-5 shrink-0" />
+    {isExpanded && (
+      <>
+        <span className="ml-3 flex-1 text-left">Users Management</span>
+        {usersOpen ? <ExpandLess /> : <ExpandMore />}
+      </>
+    )}
+  </button>
+
+  {isExpanded && usersOpen && (
+    <ul className="mt-1 space-y-1 text-xs">
+      <li>
+        <button
+          onClick={() => setPage("users")}
+          className="pl-10 w-full text-left px-2 py-1.5 rounded-md hover:bg-white/10"
+        >
+          Users
+        </button>
+      </li>
+      <li>
+        <button
+          onClick={() => setPage("roles")}
+          className="pl-10 w-full text-left px-2 py-1.5 rounded-md hover:bg-white/10"
+        >
+          Roles
+        </button>
+      </li>
+    </ul>
+  )}
+</li>
+
 
         </ul>
       </div>

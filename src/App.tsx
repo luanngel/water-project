@@ -1,49 +1,38 @@
 import { useState } from "react";
-import Sidebar from "./pages/Sidebar";
-import TopMenu from "./pages/TopMenu";
-import AreaManagement from "./pages/AreaManagement";
-import OperatorManagement from "./pages/OperatorManagement";
-import DeviceManagement from "./pages/DeviceManagement";
-import DataMonitoring from "./pages/DataMonitoring";
-import DataQuery from "./pages/DataQuery";
-import Home from "./pages/Home";
+import Sidebar from "./components/layout/Sidebar";
+import TopMenu from "./components/layout/TopMenu";
 
+import Home from "./pages/Home";
+import MetersPage from "./pages/meters/MeterPage";
+import ConcentratorsPage from "./pages/concentrators/ConcentratorsPage";
+import UsersPage from "./pages/UsersPage"; // nueva página
+import RolesPage from "./pages/RolesPage"; // nueva página
 
 export default function App() {
-  const [page, setPage] = useState<string>("home");
-  const [subPage, setSubPage] = useState<string>("default");
+  const [page, setPage] = useState("home");
 
-  const renderContent = () => {
+  const renderPage = () => {
     switch (page) {
+      case "meters":
+        return <MetersPage />;
+      case "concentrators":
+        return <ConcentratorsPage />;
+      case "users":
+        return <UsersPage />; // nueva
+      case "roles":
+        return <RolesPage />; // nueva
       case "home":
-        return <Home />;
-      case "area":
-        return <AreaManagement />;
-      case "operator":
-        return <OperatorManagement />;
-      case "device-management":
-        return <DeviceManagement />;
-      case "data-monitoring":
-        return <DataMonitoring subPage={subPage} />;
-      case "data-query":
-        return <DataQuery subPage={subPage} />;
       default:
-        return <div>Selecciona una opción</div>;
+        return <Home />;
     }
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
-      {/* SIDEBAR */}
+    <div className="flex h-screen">
       <Sidebar setPage={setPage} />
-
-      {/* MAIN */}
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <TopMenu page={page} subPage={subPage} setSubPage={setSubPage} />
-
-        <main className="flex-1 overflow-auto bg-gray-100 p-4">
-          {renderContent()}
-        </main>
+      <div className="flex-1 flex flex-col">
+        <TopMenu />
+        <main className="flex-1 overflow-auto">{renderPage()}</main>
       </div>
     </div>
   );

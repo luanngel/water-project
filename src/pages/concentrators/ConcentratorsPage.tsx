@@ -1,16 +1,19 @@
 import { useState, useEffect, useMemo } from "react";
 import { Plus, Trash2, Pencil, RefreshCcw } from "lucide-react";
 import MaterialTable from "@material-table/core";
-import { fetchProjects } from "./concentrators.api";
+import { fetchProjects, createConcentrator } from "./concentrators.api";
 
 /* ================= TYPES ================= */
 interface Concentrator {
-  id: number;
-  name: string;
-  location: string;
-  status: "ACTIVE" | "INACTIVE";
-  project: string;
-  createdAt: string;
+  "Area Name": string;
+  "Device S/N": string;
+  "Device Name": string;
+  "Device Time": string;
+  "Device Status": string;
+  "Operator": string;
+  "Installed Time": string;
+  "Communication Time": string;
+  "Instruction Manual": string;
 }
 
 interface User {
@@ -67,28 +70,37 @@ export default function ConcentratorsPage() {
 
   const [concentrators, setConcentrators] = useState<Concentrator[]>([
     {
-      id: 1,
-      name: "Concentrador A",
-      location: "Planta 1",
-      status: "ACTIVE",
-      project: "GRH (PADRE)",
-      createdAt: "2025-12-17",
+      "Area Name": "GRH (PADRE)",
+      "Device S/N": "SN001",
+      "Device Name": "Concentrador A",
+      "Device Time": "2025-12-17T10:00:00Z",
+      "Device Status": "ACTIVE",
+      "Operator": "Operador 1",
+      "Installed Time": "2025-12-17",
+      "Communication Time": "2025-12-17T10:30:00Z",
+      "Instruction Manual": "Manual A",
     },
     {
-      id: 2,
-      name: "Concentrador B",
-      location: "Planta 2",
-      status: "INACTIVE",
-      project: "CESPT",
-      createdAt: "2025-12-16",
+      "Area Name": "CESPT",
+      "Device S/N": "SN002",
+      "Device Name": "Concentrador B",
+      "Device Time": "2025-12-16T11:00:00Z",
+      "Device Status": "INACTIVE",
+      "Operator": "Operador 2",
+      "Installed Time": "2025-12-16",
+      "Communication Time": "2025-12-16T11:30:00Z",
+      "Instruction Manual": "Manual B",
     },
     {
-      id: 3,
-      name: "Concentrador C",
-      location: "Planta 3",
-      status: "ACTIVE",
-      project: "Proyecto A",
-      createdAt: "2025-12-15",
+      "Area Name": "Proyecto A",
+      "Device S/N": "SN003",
+      "Device Name": "Concentrador C",
+      "Device Time": "2025-12-15T12:00:00Z",
+      "Device Status": "ACTIVE",
+      "Operator": "Operador 3",
+      "Installed Time": "2025-12-15",
+      "Communication Time": "2025-12-15T12:30:00Z",
+      "Instruction Manual": "Manual C",
     },
   ]);
 
@@ -96,40 +108,53 @@ export default function ConcentratorsPage() {
   const [search, setSearch] = useState("");
 
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingSerial, setEditingSerial] = useState<string | null>(null);
 
   const getEmptyConcentrator = (): Omit<Concentrator, "id"> => ({
-    name: "",
-    location: "",
-    status: "ACTIVE",
-    project: selectedProject,
-    createdAt: new Date().toISOString().slice(0, 10),
+    "Area Name": selectedProject,
+    "Device S/N": "",
+    "Device Name": "",
+    "Device Time": new Date().toISOString(),
+    "Device Status": "ACTIVE",
+    "Operator": "",
+    "Installed Time": new Date().toISOString().slice(0, 10),
+    "Communication Time": new Date().toISOString(),
+    "Instruction Manual": "",
   });
 
   const [form, setForm] = useState<Omit<Concentrator, "id">>(getEmptyConcentrator());
 
   /* ================= CRUD ================= */
-  const handleSave = () => {
-    if (editingId) {
-      setConcentrators((prev) =>
-        prev.map((c) =>
-          c.id === editingId ? { id: editingId, ...form } : c
-        )
-      );
-    } else {
-      const newId = Date.now();
-      setConcentrators((prev) => [...prev, { id: newId, ...form }]);
+  const handleSave = async () => {
+    try {
+      if (editingSerial) {
+        setConcentrators((prev) =>
+          prev.map((c) =>
+            c["Device S/N"] === editingSerial ? { ...form } : c
+          )
+        );
+      } else {
+        await createConcentrator(form);
+        setConcentrators((prev) => [...prev, { ...form }]);
+      }
+      setShowModal(false);
+      setEditingSerial(null);
+      setForm({ ...getEmptyConcentrator(), "Area Name": selectedProject });
+      setActiveConcentrator(null);
+    } catch (error) {
+      console.error('Error saving concentrator:', error);
+      setConcentrators((prev) => [...prev, { ...form }]);
+      setShowModal(false);
+      setEditingSerial(null);
+      setForm({ ...getEmptyConcentrator(), "Area Name": selectedProject });
+      setActiveConcentrator(null);
     }
-    setShowModal(false);
-    setEditingId(null);
-    setForm({ ...getEmptyConcentrator(), project: selectedProject });
-    setActiveConcentrator(null);
   };
 
   const handleDelete = () => {
     if (!activeConcentrator) return;
     setConcentrators((prev) =>
-      prev.filter((c) => c.id !== activeConcentrator.id)
+      prev.filter((c) => c["Device S/N"] !== activeConcentrator["Device S/N"])
     );
     setActiveConcentrator(null);
   };
@@ -137,9 +162,9 @@ export default function ConcentratorsPage() {
   /* ================= FILTER ================= */
   const filtered = concentrators.filter(
     (c) =>
-      (c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.location.toLowerCase().includes(search.toLowerCase())) &&
-      c.project === selectedProject
+      (c["Device Name"].toLowerCase().includes(search.toLowerCase()) ||
+        c["Device S/N"].toLowerCase().includes(search.toLowerCase())) &&
+      c["Area Name"] === selectedProject
   );
 
   /* ================= UI ================= */
@@ -184,8 +209,8 @@ export default function ConcentratorsPage() {
           <div className="flex gap-3">
             <button
               onClick={() => {
-                setForm({ ...getEmptyConcentrator(), project: selectedProject });
-                setEditingId(null);
+                setForm({ ...getEmptyConcentrator(), "Area Name": selectedProject });
+                setEditingSerial(null);
                 setShowModal(true);
               }}
               className="flex items-center gap-2 px-4 py-2 bg-white text-[#4c5f9e] rounded-lg"
@@ -196,8 +221,8 @@ export default function ConcentratorsPage() {
             <button
               onClick={() => {
                 if (!activeConcentrator) return;
-                setEditingId(activeConcentrator.id);
-                setForm({ ...activeConcentrator });
+                setEditingSerial(activeConcentrator["Device S/N"]);
+                setForm(activeConcentrator);
                 setShowModal(true);
               }}
               disabled={!activeConcentrator}
@@ -235,25 +260,26 @@ export default function ConcentratorsPage() {
         <MaterialTable
           title="Concentrators"
           columns={[
-            { title: "Name", field: "name" },
+            { title: "Device Name", field: "Device Name" },
+            { title: "Device S/N", field: "Device S/N" },
             {
-              title: "Status",
-              field: "status",
+              title: "Device Status",
+              field: "Device Status",
               render: (rowData) => (
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                    rowData.status === "ACTIVE"
+                    rowData["Device Status"] === "ACTIVE"
                       ? "text-blue-600 border-blue-600"
                       : "text-red-600 border-red-600"
                   }`}
                 >
-                  {rowData.status}
+                  {rowData["Device Status"]}
                 </span>
               ),
             },
-            { title: "Location", field: "location" },
-            { title: "Project", field: "project" },
-            { title: "Created", field: "createdAt", type: "date" },
+            { title: "Operator", field: "Operator" },
+            { title: "Area Name", field: "Area Name" },
+            { title: "Installed Time", field: "Installed Time", type: "date" },
           ]}
           data={filtered}
           onRowClick={(_, rowData) => setActiveConcentrator(rowData as Concentrator)}
@@ -264,7 +290,7 @@ export default function ConcentratorsPage() {
             sorting: true,
             rowStyle: (rowData) => ({
               backgroundColor:
-                activeConcentrator?.id === (rowData as Concentrator).id
+                activeConcentrator?.["Device S/N"] === (rowData as Concentrator)["Device S/N"]
                   ? "#EEF2FF"
                   : "#FFFFFF",
             }),
@@ -277,41 +303,93 @@ export default function ConcentratorsPage() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white rounded-xl p-6 w-96 space-y-3">
             <h2 className="text-lg font-semibold">
-              {editingId ? "Edit Concentrator" : "Add Concentrator"}
+              {editingSerial ? "Edit Concentrator" : "Add Concentrator"}
             </h2>
 
-            <input
-              className="w-full border px-3 py-2 rounded"
-              placeholder="Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Device Name</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Enter device name"
+                value={form["Device Name"]}
+                onChange={(e) => setForm({ ...form, "Device Name": e.target.value })}
+              />
+            </div>
 
-            <input
-              className="w-full border px-3 py-2 rounded"
-              placeholder="Location"
-              value={form.location}
-              onChange={(e) => setForm({ ...form, location: e.target.value })}
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Device S/N</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Enter device serial number"
+                value={form["Device S/N"]}
+                onChange={(e) => setForm({ ...form, "Device S/N": e.target.value })}
+              />
+            </div>
 
-            <button
-              onClick={() =>
-                setForm({
-                  ...form,
-                  status: form.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                })
-              }
-              className="w-full border rounded px-3 py-2"
-            >
-              Status: {form.status}
-            </button>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Operator</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Enter operator name"
+                value={form["Operator"]}
+                onChange={(e) => setForm({ ...form, "Operator": e.target.value })}
+              />
+            </div>
 
-            <input
-              type="date"
-              className="w-full border px-3 py-2 rounded"
-              value={form.createdAt}
-              onChange={(e) => setForm({ ...form, createdAt: e.target.value })}
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Instruction Manual</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Enter instruction manual"
+                value={form["Instruction Manual"]}
+                onChange={(e) => setForm({ ...form, "Instruction Manual": e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Device Status</label>
+              <button
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    "Device Status": form["Device Status"] === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                  })
+                }
+                className="w-full border rounded px-3 py-2 hover:bg-gray-50"
+              >
+                Status: {form["Device Status"]}
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Installed Time</label>
+              <input
+                type="date"
+                className="w-full border px-3 py-2 rounded"
+                value={form["Installed Time"]}
+                onChange={(e) => setForm({ ...form, "Installed Time": e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Device Time</label>
+              <input
+                type="datetime-local"
+                className="w-full border px-3 py-2 rounded"
+                value={form["Device Time"].slice(0, 16)}
+                onChange={(e) => setForm({ ...form, "Device Time": new Date(e.target.value).toISOString() })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Communication Time</label>
+              <input
+                type="datetime-local"
+                className="w-full border px-3 py-2 rounded"
+                value={form["Communication Time"].slice(0, 16)}
+                onChange={(e) => setForm({ ...form, "Communication Time": new Date(e.target.value).toISOString() })}
+              />
+            </div>
 
             <div className="flex justify-end gap-2 pt-3">
               <button onClick={() => setShowModal(false)}>Cancel</button>

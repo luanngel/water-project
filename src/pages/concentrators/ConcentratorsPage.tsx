@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Plus, Trash2, Pencil, RefreshCcw } from "lucide-react";
 import MaterialTable from "@material-table/core";
+import { fetchProjects } from "./concentrators.api";
 
 /* ================= TYPES ================= */
 interface Concentrator {
@@ -27,20 +28,42 @@ export default function ConcentratorsPage() {
     project: "CESPT",
   };
 
-  // Lista de proyectos disponibles
-  const allProjects = ["GRH (PADRE)", "CESPT", "Proyecto A", "Proyecto B"];
+  const [allProjects, setAllProjects] = useState<string[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const projects = await fetchProjects();
+        setAllProjects(projects);
+      } catch (error) {
+        console.error('Error loading projects:', error);
+        setAllProjects(["GRH (PADRE)", "CESPT", "Proyecto A", "Proyecto B"]);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+
+    loadProjects();
+  }, []);
 
   // Proyectos visibles según el usuario
-  const visibleProjects =
+  const visibleProjects = useMemo(() =>
     currentUser.role === "SUPER_ADMIN"
       ? allProjects
       : currentUser.project
       ? [currentUser.project]
-      : [];
-
-  const [selectedProject, setSelectedProject] = useState(
-    visibleProjects[0] || ""
+      : [],
+    [allProjects, currentUser.role, currentUser.project]
   );
+
+  const [selectedProject, setSelectedProject] = useState("");
+
+  useEffect(() => {
+    if (visibleProjects.length > 0 && !selectedProject) {
+      setSelectedProject(visibleProjects[0]);
+    }
+  }, [visibleProjects, selectedProject]);
 
   const [concentrators, setConcentrators] = useState<Concentrator[]>([
     {
@@ -75,15 +98,15 @@ export default function ConcentratorsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  const emptyConcentrator: Omit<Concentrator, "id"> = {
+  const getEmptyConcentrator = (): Omit<Concentrator, "id"> => ({
     name: "",
     location: "",
     status: "ACTIVE",
     project: selectedProject,
     createdAt: new Date().toISOString().slice(0, 10),
-  };
+  });
 
-  const [form, setForm] = useState<Omit<Concentrator, "id">>(emptyConcentrator);
+  const [form, setForm] = useState<Omit<Concentrator, "id">>(getEmptyConcentrator());
 
   /* ================= CRUD ================= */
   const handleSave = () => {
@@ -99,7 +122,7 @@ export default function ConcentratorsPage() {
     }
     setShowModal(false);
     setEditingId(null);
-    setForm({ ...emptyConcentrator, project: selectedProject });
+    setForm({ ...getEmptyConcentrator(), project: selectedProject });
     setActiveConcentrator(null);
   };
 
@@ -132,12 +155,17 @@ export default function ConcentratorsPage() {
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
           className="w-full border px-3 py-2 rounded"
+          disabled={loadingProjects}
         >
-          {visibleProjects.map((proj) => (
-            <option key={proj} value={proj}>
-              {proj}
-            </option>
-          ))}
+          {loadingProjects ? (
+            <option>Loading projects...</option>
+          ) : (
+            visibleProjects.map((proj) => (
+              <option key={proj} value={proj}>
+                {proj}
+              </option>
+            ))
+          )}
         </select>
       </div>
 
@@ -156,7 +184,7 @@ export default function ConcentratorsPage() {
           <div className="flex gap-3">
             <button
               onClick={() => {
-                setForm({ ...emptyConcentrator, project: selectedProject });
+                setForm({ ...getEmptyConcentrator(), project: selectedProject });
                 setEditingId(null);
                 setShowModal(true);
               }}

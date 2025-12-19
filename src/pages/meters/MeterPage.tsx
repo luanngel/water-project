@@ -73,23 +73,20 @@ export default function MeterManagement() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const emptyMeter: Omit<Meter, "id"> = {
-    areaName: selectedProject,
-    accountNumber: "",
-    userName: "",
-    userAddress: "",
-    meterSN: "",
-    meterName: "",
-    meterStatus: "ACTIVE",
-    protocolType: "",
-    priceNo: "",
-    priceName: "",
-    dmaPartition: "",
-    supplyTypes: "",
-    deviceID: "",
-    deviceName: "",
-    deviceType: "",
-    usageAnalysisType: "",
-    installedTime: new Date().toISOString().slice(0, 10),
+    deviceId: "",
+    meterAddress: "",
+    manufacturerCode: "",
+    forwardCumulativeFlow: 0,
+    reverseCumulativeFlow: 0,
+    forwardInstantaneousFlow: 0,
+    waterTemperature: 0,
+    voltage: 0,
+    echoAmplitude: 0,
+    ultrasonicFlightTime: 0,
+    timestamp: new Date().toISOString(),
+    alarmBytes: "",
+    checksumOk: true,
+    receivedAt: new Date().toISOString(),
   };
 
   const [form, setForm] = useState<Omit<Meter, "id">>(emptyMeter);
@@ -131,7 +128,7 @@ export default function MeterManagement() {
       }
       setShowModal(false);
       setEditingId(null);
-      setForm({ ...emptyMeter, areaName: selectedProject });
+      setForm(emptyMeter);
       setActiveMeter(null);
     } catch (error) {
       console.error('Error saving meter:', error);
@@ -147,7 +144,7 @@ export default function MeterManagement() {
     if (!activeMeter) return;
 
     const confirmDelete = window.confirm(
-      `Are you sure you want to delete the meter "${activeMeter.meterName}"?`
+      `Are you sure you want to delete the meter "${activeMeter.deviceId}"?`
     );
 
     if (!confirmDelete) return;
@@ -174,10 +171,9 @@ export default function MeterManagement() {
   /* ================= FILTER ================= */
   const filtered = meters.filter(
     (m) =>
-      (m.meterName.toLowerCase().includes(search.toLowerCase()) ||
-        m.meterSN.toLowerCase().includes(search.toLowerCase()) ||
-        m.areaName.toLowerCase().includes(search.toLowerCase())) &&
-      m.areaName === selectedProject
+      (m.deviceId.toLowerCase().includes(search.toLowerCase()) ||
+        m.meterAddress.toLowerCase().includes(search.toLowerCase()) ||
+        m.manufacturerCode.toLowerCase().includes(search.toLowerCase()))
   );
 
   /* ================= UI ================= */
@@ -233,7 +229,7 @@ export default function MeterManagement() {
           <div className="flex gap-3">
             <button
               onClick={() => {
-                setForm({ ...emptyMeter, areaName: selectedProject });
+                setForm(emptyMeter);
                 setEditingId(null);
                 setShowModal(true);
               }}
@@ -248,23 +244,20 @@ export default function MeterManagement() {
                 if (!activeMeter) return;
                 setEditingId(activeMeter.id);
                 setForm({
-                  areaName: activeMeter.areaName,
-                  accountNumber: activeMeter.accountNumber,
-                  userName: activeMeter.userName,
-                  userAddress: activeMeter.userAddress,
-                  meterSN: activeMeter.meterSN,
-                  meterName: activeMeter.meterName,
-                  meterStatus: activeMeter.meterStatus,
-                  protocolType: activeMeter.protocolType,
-                  priceNo: activeMeter.priceNo,
-                  priceName: activeMeter.priceName,
-                  dmaPartition: activeMeter.dmaPartition,
-                  supplyTypes: activeMeter.supplyTypes,
-                  deviceID: activeMeter.deviceID,
-                  deviceName: activeMeter.deviceName,
-                  deviceType: activeMeter.deviceType,
-                  usageAnalysisType: activeMeter.usageAnalysisType,
-                  installedTime: activeMeter.installedTime,
+                  deviceId: activeMeter.deviceId,
+                  meterAddress: activeMeter.meterAddress,
+                  manufacturerCode: activeMeter.manufacturerCode,
+                  forwardCumulativeFlow: activeMeter.forwardCumulativeFlow,
+                  reverseCumulativeFlow: activeMeter.reverseCumulativeFlow,
+                  forwardInstantaneousFlow: activeMeter.forwardInstantaneousFlow,
+                  waterTemperature: activeMeter.waterTemperature,
+                  voltage: activeMeter.voltage,
+                  echoAmplitude: activeMeter.echoAmplitude,
+                  ultrasonicFlightTime: activeMeter.ultrasonicFlightTime,
+                  timestamp: activeMeter.timestamp,
+                  alarmBytes: activeMeter.alarmBytes,
+                  checksumOk: activeMeter.checksumOk,
+                  receivedAt: activeMeter.receivedAt,
                 });
                 setShowModal(true);
               }}
@@ -304,29 +297,41 @@ export default function MeterManagement() {
           title="Meters"
           isLoading={loadingMeters}
           columns={[
-            { title: "Meter Name", field: "meterName" },
-            { title: "Meter S/N", field: "meterSN" },
-            { title: "User Name", field: "userName" },
-            { title: "User Address", field: "userAddress" },
+            { title: "Device ID", field: "deviceId" },
+            { title: "Meter Address", field: "meterAddress" },
+            { title: "Manufacturer Code", field: "manufacturerCode" },
             {
-              title: "Meter Status",
-              field: "meterStatus",
+              title: "Forward Flow",
+              field: "forwardCumulativeFlow",
+              render: (rowData) => `${rowData.forwardCumulativeFlow?.toFixed(3) || 0} m³`
+            },
+            {
+              title: "Water Temp",
+              field: "waterTemperature",
+              render: (rowData) => `${rowData.waterTemperature?.toFixed(1) || 0}°C`
+            },
+            {
+              title: "Voltage",
+              field: "voltage",
+              render: (rowData) => `${rowData.voltage || 0}V`
+            },
+            {
+              title: "Checksum OK",
+              field: "checksumOk",
               render: (rowData) => (
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                    rowData.meterStatus === "ACTIVE"
-                      ? "text-blue-600 border-blue-600"
+                    rowData.checksumOk
+                      ? "text-green-600 border-green-600"
                       : "text-red-600 border-red-600"
                   }`}
                 >
-                  {rowData.meterStatus}
+                  {rowData.checksumOk ? "OK" : "ERROR"}
                 </span>
               ),
             },
-            { title: "Protocol Type", field: "protocolType" },
-            { title: "Device Name", field: "deviceName" },
-            { title: "Area Name", field: "areaName" },
-            { title: "Installed Time", field: "installedTime", type: "date" },
+            { title: "Timestamp", field: "timestamp", type: "datetime" },
+            { title: "Received At", field: "receivedAt", type: "datetime" },
           ]}
           data={filtered}
           onRowClick={(_, rowData) => setActiveMeter(rowData as Meter)}
@@ -361,177 +366,154 @@ export default function MeterManagement() {
             </h2>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Area Name</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Area Name"
-                value={form.areaName}
-                onChange={(e) => setForm({ ...form, areaName: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Account Number</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Account Number"
-                value={form.accountNumber}
-                onChange={(e) => setForm({ ...form, accountNumber: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">User Name</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="User Name"
-                value={form.userName}
-                onChange={(e) => setForm({ ...form, userName: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">User Address</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="User Address"
-                value={form.userAddress}
-                onChange={(e) => setForm({ ...form, userAddress: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Meter S/N</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Meter Serial Number"
-                value={form.meterSN}
-                onChange={(e) => setForm({ ...form, meterSN: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Meter Name</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Meter Name"
-                value={form.meterName}
-                onChange={(e) => setForm({ ...form, meterName: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Meter Status</label>
-              <button
-                onClick={() =>
-                  setForm({
-                    ...form,
-                    meterStatus: form.meterStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                  })
-                }
-                className="w-full border rounded px-3 py-2 hover:bg-gray-50"
-              >
-                Status: {form.meterStatus}
-              </button>
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Protocol Type</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Protocol Type"
-                value={form.protocolType}
-                onChange={(e) => setForm({ ...form, protocolType: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Price No.</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Price Number"
-                value={form.priceNo}
-                onChange={(e) => setForm({ ...form, priceNo: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Price Name</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Price Name"
-                value={form.priceName}
-                onChange={(e) => setForm({ ...form, priceName: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">DMA Partition</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="DMA Partition"
-                value={form.dmaPartition}
-                onChange={(e) => setForm({ ...form, dmaPartition: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Supply Types</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Supply Types"
-                value={form.supplyTypes}
-                onChange={(e) => setForm({ ...form, supplyTypes: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-1">
               <label className="block text-sm font-medium text-gray-700">Device ID</label>
               <input
                 className="w-full border px-3 py-2 rounded"
                 placeholder="Device ID"
-                value={form.deviceID}
-                onChange={(e) => setForm({ ...form, deviceID: e.target.value })}
+                value={form.deviceId}
+                onChange={(e) => setForm({ ...form, deviceId: e.target.value })}
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Device Name</label>
+              <label className="block text-sm font-medium text-gray-700">Meter Address</label>
               <input
                 className="w-full border px-3 py-2 rounded"
-                placeholder="Device Name"
-                value={form.deviceName}
-                onChange={(e) => setForm({ ...form, deviceName: e.target.value })}
+                placeholder="Meter Address"
+                value={form.meterAddress}
+                onChange={(e) => setForm({ ...form, meterAddress: e.target.value })}
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Device Type</label>
+              <label className="block text-sm font-medium text-gray-700">Manufacturer Code</label>
               <input
                 className="w-full border px-3 py-2 rounded"
-                placeholder="Device Type"
-                value={form.deviceType}
-                onChange={(e) => setForm({ ...form, deviceType: e.target.value })}
+                placeholder="Manufacturer Code"
+                value={form.manufacturerCode}
+                onChange={(e) => setForm({ ...form, manufacturerCode: e.target.value })}
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Usage Analysis Type</label>
+              <label className="block text-sm font-medium text-gray-700">Forward Cumulative Flow (m³)</label>
               <input
+                type="number"
+                step="0.001"
                 className="w-full border px-3 py-2 rounded"
-                placeholder="Usage Analysis Type"
-                value={form.usageAnalysisType}
-                onChange={(e) => setForm({ ...form, usageAnalysisType: e.target.value })}
+                placeholder="0.000"
+                value={form.forwardCumulativeFlow}
+                onChange={(e) => setForm({ ...form, forwardCumulativeFlow: parseFloat(e.target.value) || 0 })}
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Installed Time</label>
+              <label className="block text-sm font-medium text-gray-700">Reverse Cumulative Flow (m³)</label>
               <input
-                type="date"
+                type="number"
+                step="0.001"
                 className="w-full border px-3 py-2 rounded"
-                value={form.installedTime}
-                onChange={(e) => setForm({ ...form, installedTime: e.target.value })}
+                placeholder="0.000"
+                value={form.reverseCumulativeFlow}
+                onChange={(e) => setForm({ ...form, reverseCumulativeFlow: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Forward Instantaneous Flow</label>
+              <input
+                type="number"
+                step="0.001"
+                className="w-full border px-3 py-2 rounded"
+                placeholder="0.000"
+                value={form.forwardInstantaneousFlow}
+                onChange={(e) => setForm({ ...form, forwardInstantaneousFlow: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Water Temperature (°C)</label>
+              <input
+                type="number"
+                step="0.1"
+                className="w-full border px-3 py-2 rounded"
+                placeholder="0.0"
+                value={form.waterTemperature}
+                onChange={(e) => setForm({ ...form, waterTemperature: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Voltage (V)</label>
+              <input
+                type="number"
+                step="0.1"
+                className="w-full border px-3 py-2 rounded"
+                placeholder="0.0"
+                value={form.voltage}
+                onChange={(e) => setForm({ ...form, voltage: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Echo Amplitude</label>
+              <input
+                type="number"
+                className="w-full border px-3 py-2 rounded"
+                placeholder="0"
+                value={form.echoAmplitude}
+                onChange={(e) => setForm({ ...form, echoAmplitude: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Ultrasonic Flight Time</label>
+              <input
+                type="number"
+                className="w-full border px-3 py-2 rounded"
+                placeholder="0"
+                value={form.ultrasonicFlightTime}
+                onChange={(e) => setForm({ ...form, ultrasonicFlightTime: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Timestamp</label>
+              <input
+                type="datetime-local"
+                className="w-full border px-3 py-2 rounded"
+                value={form.timestamp ? new Date(form.timestamp).toISOString().slice(0, 16) : ""}
+                onChange={(e) => setForm({ ...form, timestamp: new Date(e.target.value).toISOString() })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Alarm Bytes</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Alarm Bytes"
+                value={form.alarmBytes}
+                onChange={(e) => setForm({ ...form, alarmBytes: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Checksum OK</label>
+              <button
+                onClick={() => setForm({ ...form, checksumOk: !form.checksumOk })}
+                className="w-full border rounded px-3 py-2 hover:bg-gray-50"
+              >
+                Status: {form.checksumOk ? "OK" : "ERROR"}
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Received At</label>
+              <input
+                type="datetime-local"
+                className="w-full border px-3 py-2 rounded"
+                value={form.receivedAt ? new Date(form.receivedAt).toISOString().slice(0, 16) : ""}
+                onChange={(e) => setForm({ ...form, receivedAt: new Date(e.target.value).toISOString() })}
               />
             </div>
 

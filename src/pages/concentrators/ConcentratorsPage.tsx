@@ -1,16 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Plus, Trash2, Pencil, RefreshCcw } from "lucide-react";
 import MaterialTable from "@material-table/core";
+import { fetchProjectNames } from "../../api/projects";
+import {
+  fetchConcentrators,
+  createConcentrator,
+  updateConcentrator,
+  deleteConcentrator,
+  type Concentrator,
+} from "../../api/concentrators";
 
 /* ================= TYPES ================= */
-interface Concentrator {
-  id: number;
-  name: string;
-  location: string;
-  status: "ACTIVE" | "INACTIVE";
-  project: string;
-  createdAt: string;
-}
 
 interface User {
   name: string;
@@ -27,96 +27,144 @@ export default function ConcentratorsPage() {
     project: "CESPT",
   };
 
-  // Lista de proyectos disponibles
-  const allProjects = ["GRH (PADRE)", "CESPT", "Proyecto A", "Proyecto B"];
+  const [allProjects, setAllProjects] = useState<string[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [loadingConcentrators, setLoadingConcentrators] = useState(true);
+
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const projects = await fetchProjectNames();
+        setAllProjects(projects);
+      } catch (error) {
+        console.error('Error loading projects:', error);
+        setAllProjects([]);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+
+    loadProjects();
+  }, []);
 
   // Proyectos visibles según el usuario
-  const visibleProjects =
+  const visibleProjects = useMemo(() =>
     currentUser.role === "SUPER_ADMIN"
       ? allProjects
       : currentUser.project
       ? [currentUser.project]
-      : [];
-
-  const [selectedProject, setSelectedProject] = useState(
-    visibleProjects[0] || ""
+      : [],
+    [allProjects, currentUser.role, currentUser.project]
   );
 
-  const [concentrators, setConcentrators] = useState<Concentrator[]>([
-    {
-      id: 1,
-      name: "Concentrador A",
-      location: "Planta 1",
-      status: "ACTIVE",
-      project: "GRH (PADRE)",
-      createdAt: "2025-12-17",
-    },
-    {
-      id: 2,
-      name: "Concentrador B",
-      location: "Planta 2",
-      status: "INACTIVE",
-      project: "CESPT",
-      createdAt: "2025-12-16",
-    },
-    {
-      id: 3,
-      name: "Concentrador C",
-      location: "Planta 3",
-      status: "ACTIVE",
-      project: "Proyecto A",
-      createdAt: "2025-12-15",
-    },
-  ]);
+  const [selectedProject, setSelectedProject] = useState("");
+  const [concentrators, setConcentrators] = useState<Concentrator[]>([]);
+
+  useEffect(() => {
+    if (visibleProjects.length > 0 && !selectedProject) {
+      setSelectedProject(visibleProjects[0]);
+    }
+  }, [visibleProjects, selectedProject]);
+
+  const loadConcentrators = async () => {
+    setLoadingConcentrators(true);
+    try {
+      const data = await fetchConcentrators();
+      setConcentrators(data);
+    } catch (error) {
+      console.error("Error loading concentrators:", error);
+      setConcentrators([]);
+    } finally {
+      setLoadingConcentrators(false);
+    }
+  };
+
+  useEffect(() => {
+    loadConcentrators();
+  }, []);
 
   const [activeConcentrator, setActiveConcentrator] = useState<Concentrator | null>(null);
   const [search, setSearch] = useState("");
 
   const [showModal, setShowModal] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingSerial, setEditingSerial] = useState<string | null>(null);
 
-  const emptyConcentrator: Omit<Concentrator, "id"> = {
-    name: "",
-    location: "",
-    status: "ACTIVE",
-    project: selectedProject,
-    createdAt: new Date().toISOString().slice(0, 10),
-  };
+  const getEmptyConcentrator = (): Omit<Concentrator, "id"> => ({
+    "Area Name": selectedProject,
+    "Device S/N": "",
+    "Device Name": "",
+    "Device Time": new Date().toISOString(),
+    "Device Status": "ACTIVE",
+    "Operator": "",
+    "Installed Time": new Date().toISOString().slice(0, 10),
+    "Communication Time": new Date().toISOString(),
+    "Instruction Manual": "",
+  });
 
-  const [form, setForm] = useState<Omit<Concentrator, "id">>(emptyConcentrator);
+  const [form, setForm] = useState<Omit<Concentrator, "id">>(getEmptyConcentrator());
 
   /* ================= CRUD ================= */
-  const handleSave = () => {
-    if (editingId) {
-      setConcentrators((prev) =>
-        prev.map((c) =>
-          c.id === editingId ? { id: editingId, ...form } : c
-        )
+  const handleSave = async () => {
+    try {
+      if (editingSerial) {
+        const concentratorToUpdate = concentrators.find(c => c["Device S/N"] === editingSerial);
+        if (!concentratorToUpdate) {
+          throw new Error("Concentrator to update not found");
+        }
+
+        const updatedConcentrator = await updateConcentrator(concentratorToUpdate.id, form);
+        setConcentrators((prev) =>
+          prev.map((c) =>
+            c.id === concentratorToUpdate.id ? updatedConcentrator : c
+          )
+        );
+      } else {
+        const newConcentrator = await createConcentrator(form);
+        setConcentrators((prev) => [...prev, newConcentrator]);
+      }
+      setShowModal(false);
+      setEditingSerial(null);
+      setForm({ ...getEmptyConcentrator(), "Area Name": selectedProject });
+      setActiveConcentrator(null);
+    } catch (error) {
+      console.error('Error saving concentrator:', error);
+      alert(
+        `Error saving concentrator: ${
+          error instanceof Error ? error.message : "Please try again."
+        }`
       );
-    } else {
-      const newId = Date.now();
-      setConcentrators((prev) => [...prev, { id: newId, ...form }]);
     }
-    setShowModal(false);
-    setEditingId(null);
-    setForm({ ...emptyConcentrator, project: selectedProject });
-    setActiveConcentrator(null);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!activeConcentrator) return;
-    setConcentrators((prev) =>
-      prev.filter((c) => c.id !== activeConcentrator.id)
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete the concentrator "${activeConcentrator["Device Name"]}"?`
     );
-    setActiveConcentrator(null);
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteConcentrator(activeConcentrator.id);
+      setConcentrators((prev) => prev.filter((c) => c.id !== activeConcentrator.id));
+      setActiveConcentrator(null);
+    } catch (error) {
+      console.error("Error deleting concentrator:", error);
+      alert(
+        `Error deleting concentrator: ${
+          error instanceof Error ? error.message : "Please try again."
+        }`
+      );
+    }
   };
 
   /* ================= FILTER ================= */
   const filtered = concentrators.filter(
     (c) =>
-      (c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.location.toLowerCase().includes(search.toLowerCase())) &&
-      c.project === selectedProject
+      (c["Device Name"].toLowerCase().includes(search.toLowerCase()) ||
+        c["Device S/N"].toLowerCase().includes(search.toLowerCase())) &&
+      c["Area Name"] === selectedProject
   );
 
   /* ================= UI ================= */
@@ -132,13 +180,26 @@ export default function ConcentratorsPage() {
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
           className="w-full border px-3 py-2 rounded"
+          disabled={loadingProjects || visibleProjects.length === 0}
         >
-          {visibleProjects.map((proj) => (
-            <option key={proj} value={proj}>
-              {proj}
-            </option>
-          ))}
+          {loadingProjects ? (
+            <option>Loading projects...</option>
+          ) : visibleProjects.length === 0 ? (
+            <option>No projects available</option>
+          ) : (
+            visibleProjects.map((proj) => (
+              <option key={proj} value={proj}>
+                {proj}
+              </option>
+            ))
+          )}
         </select>
+
+        {visibleProjects.length === 0 && !loadingProjects && (
+          <p className="text-sm text-gray-500 mt-2">
+            No projects available. Please contact your administrator.
+          </p>
+        )}
       </div>
 
       {/* MAIN */}
@@ -156,11 +217,12 @@ export default function ConcentratorsPage() {
           <div className="flex gap-3">
             <button
               onClick={() => {
-                setForm({ ...emptyConcentrator, project: selectedProject });
-                setEditingId(null);
+                setForm({ ...getEmptyConcentrator(), "Area Name": selectedProject });
+                setEditingSerial(null);
                 setShowModal(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-[#4c5f9e] rounded-lg"
+              disabled={!selectedProject || visibleProjects.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-white text-[#4c5f9e] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={16} /> Add
             </button>
@@ -168,8 +230,18 @@ export default function ConcentratorsPage() {
             <button
               onClick={() => {
                 if (!activeConcentrator) return;
-                setEditingId(activeConcentrator.id);
-                setForm({ ...activeConcentrator });
+                setEditingSerial(activeConcentrator["Device S/N"]);
+                setForm({
+                  "Area Name": activeConcentrator["Area Name"],
+                  "Device S/N": activeConcentrator["Device S/N"],
+                  "Device Name": activeConcentrator["Device Name"],
+                  "Device Time": activeConcentrator["Device Time"],
+                  "Device Status": activeConcentrator["Device Status"],
+                  "Operator": activeConcentrator["Operator"],
+                  "Installed Time": activeConcentrator["Installed Time"],
+                  "Communication Time": activeConcentrator["Communication Time"],
+                  "Instruction Manual": activeConcentrator["Instruction Manual"],
+                });
                 setShowModal(true);
               }}
               disabled={!activeConcentrator}
@@ -187,7 +259,7 @@ export default function ConcentratorsPage() {
             </button>
 
             <button
-              onClick={() => setConcentrators([...concentrators])}
+              onClick={loadConcentrators}
               className="flex items-center gap-2 px-4 py-2 border border-white/40 rounded-lg"
             >
               <RefreshCcw size={16} /> Refresh
@@ -206,26 +278,28 @@ export default function ConcentratorsPage() {
         {/* TABLE */}
         <MaterialTable
           title="Concentrators"
+          isLoading={loadingConcentrators}
           columns={[
-            { title: "Name", field: "name" },
+            { title: "Device Name", field: "Device Name" },
+            { title: "Device S/N", field: "Device S/N" },
             {
-              title: "Status",
-              field: "status",
+              title: "Device Status",
+              field: "Device Status",
               render: (rowData) => (
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                    rowData.status === "ACTIVE"
+                    rowData["Device Status"] === "ACTIVE"
                       ? "text-blue-600 border-blue-600"
                       : "text-red-600 border-red-600"
                   }`}
                 >
-                  {rowData.status}
+                  {rowData["Device Status"]}
                 </span>
               ),
             },
-            { title: "Location", field: "location" },
-            { title: "Project", field: "project" },
-            { title: "Created", field: "createdAt", type: "date" },
+            { title: "Operator", field: "Operator" },
+            { title: "Area Name", field: "Area Name" },
+            { title: "Installed Time", field: "Installed Time", type: "date" },
           ]}
           data={filtered}
           onRowClick={(_, rowData) => setActiveConcentrator(rowData as Concentrator)}
@@ -241,6 +315,13 @@ export default function ConcentratorsPage() {
                   : "#FFFFFF",
             }),
           }}
+          localization={{
+            body: {
+              emptyDataSourceMessage: loadingConcentrators
+                ? "Loading concentrators..."
+                : "No concentrators found. Click 'Add' to create your first concentrator.",
+            },
+          }}
         />
       </div>
 
@@ -249,41 +330,93 @@ export default function ConcentratorsPage() {
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white rounded-xl p-6 w-96 space-y-3">
             <h2 className="text-lg font-semibold">
-              {editingId ? "Edit Concentrator" : "Add Concentrator"}
+              {editingSerial ? "Edit Concentrator" : "Add Concentrator"}
             </h2>
 
-            <input
-              className="w-full border px-3 py-2 rounded"
-              placeholder="Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Device Name</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Enter device name"
+                value={form["Device Name"]}
+                onChange={(e) => setForm({ ...form, "Device Name": e.target.value })}
+              />
+            </div>
 
-            <input
-              className="w-full border px-3 py-2 rounded"
-              placeholder="Location"
-              value={form.location}
-              onChange={(e) => setForm({ ...form, location: e.target.value })}
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Device S/N</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Enter device serial number"
+                value={form["Device S/N"]}
+                onChange={(e) => setForm({ ...form, "Device S/N": e.target.value })}
+              />
+            </div>
 
-            <button
-              onClick={() =>
-                setForm({
-                  ...form,
-                  status: form.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                })
-              }
-              className="w-full border rounded px-3 py-2"
-            >
-              Status: {form.status}
-            </button>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Operator</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Enter operator name"
+                value={form["Operator"]}
+                onChange={(e) => setForm({ ...form, "Operator": e.target.value })}
+              />
+            </div>
 
-            <input
-              type="date"
-              className="w-full border px-3 py-2 rounded"
-              value={form.createdAt}
-              onChange={(e) => setForm({ ...form, createdAt: e.target.value })}
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Instruction Manual</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Enter instruction manual"
+                value={form["Instruction Manual"]}
+                onChange={(e) => setForm({ ...form, "Instruction Manual": e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Device Status</label>
+              <button
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    "Device Status": form["Device Status"] === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                  })
+                }
+                className="w-full border rounded px-3 py-2 hover:bg-gray-50"
+              >
+                Status: {form["Device Status"]}
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Installed Time</label>
+              <input
+                type="date"
+                className="w-full border px-3 py-2 rounded"
+                value={form["Installed Time"]}
+                onChange={(e) => setForm({ ...form, "Installed Time": e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Device Time</label>
+              <input
+                type="datetime-local"
+                className="w-full border px-3 py-2 rounded"
+                value={form["Device Time"].slice(0, 16)}
+                onChange={(e) => setForm({ ...form, "Device Time": new Date(e.target.value).toISOString() })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Communication Time</label>
+              <input
+                type="datetime-local"
+                className="w-full border px-3 py-2 rounded"
+                value={form["Communication Time"].slice(0, 16)}
+                onChange={(e) => setForm({ ...form, "Communication Time": new Date(e.target.value).toISOString() })}
+              />
+            </div>
 
             <div className="flex justify-end gap-2 pt-3">
               <button onClick={() => setShowModal(false)}>Cancel</button>

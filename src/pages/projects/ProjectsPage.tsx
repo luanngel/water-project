@@ -1,67 +1,13 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, Pencil, RefreshCcw } from "lucide-react";
 import MaterialTable from "@material-table/core";
-
-/* ================= TYPES ================= */
-interface Project {
-  id: string;
-  areaName: string;
-  deviceSN: string;
-  deviceName: string;
-  deviceType: string;
-  deviceStatus: "ACTIVE" | "INACTIVE";
-  operator: string;
-  installedTime: string;
-  communicationTime: string;
-  instructionManual: string;
-}
-
-/* ================= API ================= */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const API_URL = `${API_BASE_URL}/api/v3/data/ppfu31vhv5gf6i0/m05u6wpquvdbv3c/records`;
-const API_TOKEN = import.meta.env.VITE_API_TOKEN;
-
-const getAuthHeaders = () => ({
-  Authorization: `Bearer ${API_TOKEN}`,
-  "Content-Type": "application/json",
-});
-
-interface ProjectApiRecord {
-  id: number;
-  fields: {
-    "Area name"?: string;
-    "Device S/N"?: string;
-    "Device Name"?: string;
-    "Device Type"?: string;
-    "Device Status"?: string;
-    Operator?: string;
-    "Installed Time"?: string;
-    "Communication Time"?: string;
-    "Instruction Manual"?: string | null;
-  };
-}
-
-const fetchProjects = async (): Promise<Project[]> => {
-  const res = await fetch(API_URL, {
-    method: "GET",
-    headers: getAuthHeaders(),
-  });
-  const data = await res.json();
-
-  return data.records.map((r: ProjectApiRecord) => ({
-    id: r.id.toString(),
-    areaName: r.fields["Area name"] ?? "",
-    deviceSN: r.fields["Device S/N"] ?? "",
-    deviceName: r.fields["Device Name"] ?? "",
-    deviceType: r.fields["Device Type"] ?? "",
-    deviceStatus:
-      r.fields["Device Status"] === "Installed" ? "ACTIVE" : "INACTIVE",
-    operator: r.fields["Operator"] ?? "",
-    installedTime: r.fields["Installed Time"] ?? "",
-    communicationTime: r.fields["Communication Time"] ?? "",
-    instructionManual: r.fields["Instruction Manual"] ?? "",
-  }));
-};
+import {
+  Project,
+  fetchProjects,
+  createProject as apiCreateProject,
+  updateProject as apiUpdateProject,
+  deleteProject as apiDeleteProject,
+} from "../../api/projects";
 
 /* ================= COMPONENT ================= */
 export default function ProjectsPage() {
@@ -105,160 +51,16 @@ export default function ProjectsPage() {
     loadProjects();
   }, []);
 
-  /* ================= CRUD ================= */
-  const createProject = async (
-    projectData: Omit<Project, "id">
-  ): Promise<Project> => {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        fields: {
-          "Area name": projectData.areaName,
-          "Device S/N": projectData.deviceSN,
-          "Device Name": projectData.deviceName,
-          "Device Type": projectData.deviceType,
-          "Device Status":
-            projectData.deviceStatus === "ACTIVE" ? "Installed" : "Inactive",
-          Operator: projectData.operator,
-          "Installed Time": projectData.installedTime,
-          "Communication Time": projectData.communicationTime,
-          "Instruction Manual": projectData.instructionManual,
-        },
-      }),
-    });
-
-    if (!res.ok) {
-      throw new Error(
-        `Failed to create project: ${res.status} ${res.statusText}`
-      );
-    }
-
-    const data = await res.json();
-
-    const createdRecord = data.records?.[0];
-    if (!createdRecord) {
-      throw new Error("Invalid response format: no record returned");
-    }
-
-    return {
-      id: createdRecord.id.toString(),
-      areaName: createdRecord.fields["Area name"] ?? projectData.areaName,
-      deviceSN: createdRecord.fields["Device S/N"] ?? projectData.deviceSN,
-      deviceName: createdRecord.fields["Device Name"] ?? projectData.deviceName,
-      deviceType: createdRecord.fields["Device Type"] ?? projectData.deviceType,
-      deviceStatus:
-        createdRecord.fields["Device Status"] === "Installed"
-          ? "ACTIVE"
-          : "INACTIVE",
-      operator: createdRecord.fields["Operator"] ?? projectData.operator,
-      installedTime:
-        createdRecord.fields["Installed Time"] ?? projectData.installedTime,
-      communicationTime:
-        createdRecord.fields["Communication Time"] ??
-        projectData.communicationTime,
-      instructionManual:
-        createdRecord.fields["Instruction Manual"] ??
-        projectData.instructionManual,
-    };
-  };
-
-  const updateProject = async (
-    id: string,
-    projectData: Omit<Project, "id">
-  ): Promise<Project> => {
-    const res = await fetch(API_URL, {
-      method: "PATCH",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        id: parseInt(id),
-        fields: {
-          "Area name": projectData.areaName,
-          "Device S/N": projectData.deviceSN,
-          "Device Name": projectData.deviceName,
-          "Device Type": projectData.deviceType,
-          "Device Status":
-            projectData.deviceStatus === "ACTIVE" ? "Installed" : "Inactive",
-          Operator: projectData.operator,
-          "Installed Time": projectData.installedTime,
-          "Communication Time": projectData.communicationTime,
-          "Instruction Manual": projectData.instructionManual,
-        },
-      }),
-    });
-
-    if (!res.ok) {
-      if (res.status === 400) {
-        const errorData = await res.json();
-        throw new Error(
-          `Bad Request: ${errorData.msg || "Invalid data provided"}`
-        );
-      }
-      throw new Error(
-        `Failed to update project: ${res.status} ${res.statusText}`
-      );
-    }
-
-    const data = await res.json();
-
-    const updatedRecord = data.records?.[0];
-    if (!updatedRecord) {
-      throw new Error("Invalid response format: no record returned");
-    }
-
-    return {
-      id: updatedRecord.id.toString(),
-      areaName: updatedRecord.fields["Area name"] ?? projectData.areaName,
-      deviceSN: updatedRecord.fields["Device S/N"] ?? projectData.deviceSN,
-      deviceName: updatedRecord.fields["Device Name"] ?? projectData.deviceName,
-      deviceType: updatedRecord.fields["Device Type"] ?? projectData.deviceType,
-      deviceStatus:
-        updatedRecord.fields["Device Status"] === "Installed"
-          ? "ACTIVE"
-          : "INACTIVE",
-      operator: updatedRecord.fields["Operator"] ?? projectData.operator,
-      installedTime:
-        updatedRecord.fields["Installed Time"] ?? projectData.installedTime,
-      communicationTime:
-        updatedRecord.fields["Communication Time"] ??
-        projectData.communicationTime,
-      instructionManual:
-        updatedRecord.fields["Instruction Manual"] ??
-        projectData.instructionManual,
-    };
-  };
-
-  const deleteProject = async (id: string): Promise<void> => {
-    const res = await fetch(API_URL, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        id: id,
-      }),
-    });
-
-    if (!res.ok) {
-      if (res.status === 400) {
-        const errorData = await res.json();
-        throw new Error(
-          `Bad Request: ${errorData.msg || "Invalid data provided"}`
-        );
-      }
-      throw new Error(
-        `Failed to delete project: ${res.status} ${res.statusText}`
-      );
-    }
-  };
 
   const handleSave = async () => {
     try {
       if (editingId) {
-        const updatedProject = await updateProject(editingId, form);
+        const updatedProject = await apiUpdateProject(editingId, form);
         setProjects((prev) =>
           prev.map((p) => (p.id === editingId ? updatedProject : p))
         );
       } else {
-        const newProject = await createProject(form);
+        const newProject = await apiCreateProject(form);
         setProjects((prev) => [...prev, newProject]);
       }
 
@@ -286,7 +88,7 @@ export default function ProjectsPage() {
     if (!confirmDelete) return;
 
     try {
-      await deleteProject(activeProject.id);
+      await apiDeleteProject(activeProject.id);
       setProjects((prev) => prev.filter((p) => p.id !== activeProject.id));
       setActiveProject(null);
     } catch (error) {

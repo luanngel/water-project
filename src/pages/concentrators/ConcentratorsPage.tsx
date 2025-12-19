@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Plus, Trash2, Pencil, RefreshCcw } from "lucide-react";
 import MaterialTable from "@material-table/core";
-import { fetchProjects, createConcentrator } from "./concentrators.api";
+import { fetchProjectNames } from "../../api/projects";
+import { createConcentrator } from "./concentrators.api";
 
 /* ================= TYPES ================= */
 interface Concentrator {
@@ -37,7 +38,7 @@ export default function ConcentratorsPage() {
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const projects = await fetchProjects();
+        const projects = await fetchProjectNames();
         setAllProjects(projects);
       } catch (error) {
         console.error('Error loading projects:', error);
@@ -180,10 +181,12 @@ export default function ConcentratorsPage() {
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
           className="w-full border px-3 py-2 rounded"
-          disabled={loadingProjects}
+          disabled={loadingProjects || visibleProjects.length === 0}
         >
           {loadingProjects ? (
             <option>Loading projects...</option>
+          ) : visibleProjects.length === 0 ? (
+            <option>No projects available</option>
           ) : (
             visibleProjects.map((proj) => (
               <option key={proj} value={proj}>
@@ -192,6 +195,12 @@ export default function ConcentratorsPage() {
             ))
           )}
         </select>
+
+        {visibleProjects.length === 0 && !loadingProjects && (
+          <p className="text-sm text-gray-500 mt-2">
+            No projects available. Please contact your administrator.
+          </p>
+        )}
       </div>
 
       {/* MAIN */}
@@ -213,7 +222,8 @@ export default function ConcentratorsPage() {
                 setEditingSerial(null);
                 setShowModal(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-[#4c5f9e] rounded-lg"
+              disabled={!selectedProject || visibleProjects.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-white text-[#4c5f9e] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={16} /> Add
             </button>

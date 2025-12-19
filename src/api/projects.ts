@@ -72,7 +72,7 @@ export const fetchProjectNames = async (): Promise<string[]> => {
     return projectNames;
   } catch (error) {
     console.error("Error fetching project names:", error);
-    return ["GRH (PADRE)", "CESPT", "Proyecto A", "Proyecto B"];
+    return [];
   }
 };
 

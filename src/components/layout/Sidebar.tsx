@@ -7,17 +7,16 @@ import {
   ExpandLess,
   Menu,
   People,
-  Key
 } from "@mui/icons-material";
+import { Page } from "../../App";
 
 interface SidebarProps {
-  setPage: (page: string) => void;
+  setPage: (page: Page) => void;
 }
 
 export default function Sidebar({ setPage }: SidebarProps) {
   const [systemOpen, setSystemOpen] = useState(true);
-  const [waterOpen, setWaterOpen] = useState(true);
-  const [usersOpen, setUsersOpen] = useState(true); // Nuevo
+  const [usersOpen, setUsersOpen] = useState(true);
   const [pinned, setPinned] = useState(false);
   const [hovered, setHovered] = useState(false);
 
@@ -51,7 +50,6 @@ export default function Sidebar({ setPage }: SidebarProps) {
       {/* MENU */}
       <div className="flex-1 py-4 px-2 overflow-y-auto">
         <ul className="space-y-1 text-white text-sm">
-
           {/* DASHBOARD */}
           <li>
             <button
@@ -72,7 +70,9 @@ export default function Sidebar({ setPage }: SidebarProps) {
               <Settings className="w-5 h-5 shrink-0" />
               {isExpanded && (
                 <>
-                  <span className="ml-3 flex-1 text-left">Project Management</span>
+                  <span className="ml-3 flex-1 text-left">
+                    Project Management
+                  </span>
                   {systemOpen ? <ExpandLess /> : <ExpandMore />}
                 </>
               )}
@@ -82,101 +82,72 @@ export default function Sidebar({ setPage }: SidebarProps) {
               <ul className="mt-1 space-y-1 text-xs">
                 <li>
                   <button
+                    onClick={() => setPage("projects")}
+                    className="pl-10 w-full text-left px-2 py-1.5 rounded-md hover:bg-white/10"
+                  >
+                    Projects
+                  </button>
+                </li>
+
+                <li>
+                  <button
                     onClick={() => setPage("concentrators")}
                     className="pl-10 w-full text-left px-2 py-1.5 rounded-md hover:bg-white/10"
                   >
-                    Concentradores
+                    Concentrators
                   </button>
                 </li>
+
                 <li>
                   <button
                     onClick={() => setPage("meters")}
                     className="pl-10 w-full text-left px-2 py-1.5 rounded-md hover:bg-white/10"
                   >
-                    Medidores
+                    Meters
                   </button>
                 </li>
               </ul>
             )}
           </li>
 
-          {/* WATER METER SYSTEM 
+          {/* USERS MANAGEMENT */}
           <li>
             <button
-              onClick={() => isExpanded && setWaterOpen(!waterOpen)}
+              onClick={() => isExpanded && setUsersOpen(!usersOpen)}
               className="flex items-center w-full px-2 py-2 rounded-md hover:bg-white/10 font-bold"
             >
-              <WaterDrop className="w-5 h-5 shrink-0" />
+              <People className="w-5 h-5 shrink-0" />
               {isExpanded && (
                 <>
-                  <span className="ml-3 flex-1 text-left">Water Meter System Management</span>
-                  {waterOpen ? <ExpandLess /> : <ExpandMore />}
+                  <span className="ml-3 flex-1 text-left">
+                    Users Management
+                  </span>
+                  {usersOpen ? <ExpandLess /> : <ExpandMore />}
                 </>
               )}
             </button>
 
-            {isExpanded && waterOpen && (
+            {isExpanded && usersOpen && (
               <ul className="mt-1 space-y-1 text-xs">
-                {[
-                  ["water-install", "Water Meter Installation"],
-                  ["device-install", "Device Installation"],
-                  ["meter-management", "Meter Management"],
-                  ["device-management", "Device Management"],
-                  ["data-monitoring", "Data Monitoring"],
-                  ["data-query", "Data Query"],
-                ].map(([key, label]) => (
-                  <li key={key}>
-                    <button
-                      onClick={() => setPage(key)}
-                      className="pl-10 w-full text-left px-2 py-1.5 rounded-md hover:bg-white/10"
-                    >
-                      {label}
-                    </button>
-                  </li>
-                ))}
+                <li>
+                  <button
+                    onClick={() => setPage("users")}
+                    className="pl-10 w-full text-left px-2 py-1.5 rounded-md hover:bg-white/10"
+                  >
+                    Users
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => setPage("roles")}
+                    className="pl-10 w-full text-left px-2 py-1.5 rounded-md hover:bg-white/10"
+                  >
+                    Roles
+                  </button>
+                </li>
               </ul>
             )}
           </li>
-          *}
-
-         {/* SYSTEM USERS */}
-<li>
-  <button
-    onClick={() => isExpanded && setUsersOpen(!usersOpen)}
-    className="flex items-center w-full px-2 py-2 rounded-md hover:bg-white/10 font-bold"
-  >
-    <People className="w-5 h-5 shrink-0" />
-    {isExpanded && (
-      <>
-        <span className="ml-3 flex-1 text-left">Users Management</span>
-        {usersOpen ? <ExpandLess /> : <ExpandMore />}
-      </>
-    )}
-  </button>
-
-  {isExpanded && usersOpen && (
-    <ul className="mt-1 space-y-1 text-xs">
-      <li>
-        <button
-          onClick={() => setPage("users")}
-          className="pl-10 w-full text-left px-2 py-1.5 rounded-md hover:bg-white/10"
-        >
-          Users
-        </button>
-      </li>
-      <li>
-        <button
-          onClick={() => setPage("roles")}
-          className="pl-10 w-full text-left px-2 py-1.5 rounded-md hover:bg-white/10"
-        >
-          Roles
-        </button>
-      </li>
-    </ul>
-  )}
-</li>
-
-
         </ul>
       </div>
     </aside>

@@ -99,6 +99,11 @@ export default function ConcentratorsPage() {
     "Installed Time": new Date().toISOString().slice(0, 10),
     "Communication Time": new Date().toISOString(),
     "Instruction Manual": "",
+    "Gateway ID": 0,
+    "Gateway EUI": "",
+    "Gateway Name": "",
+    "Gateway Description": "",
+    "Antenna Placement": "Indoor",
   });
 
   const [form, setForm] = useState<Omit<Concentrator, "id">>(getEmptyConcentrator());
@@ -241,6 +246,11 @@ export default function ConcentratorsPage() {
                   "Installed Time": activeConcentrator["Installed Time"],
                   "Communication Time": activeConcentrator["Communication Time"],
                   "Instruction Manual": activeConcentrator["Instruction Manual"],
+                  "Gateway ID": activeConcentrator["Gateway ID"],
+                  "Gateway EUI": activeConcentrator["Gateway EUI"],
+                  "Gateway Name": activeConcentrator["Gateway Name"],
+                  "Gateway Description": activeConcentrator["Gateway Description"],
+                  "Antenna Placement": activeConcentrator["Antenna Placement"],
                 });
                 setShowModal(true);
               }}
@@ -415,6 +425,55 @@ export default function ConcentratorsPage() {
       })
     }
   />
+
+  <input
+    type="number"
+    className="w-full border px-3 py-2 rounded"
+    placeholder="Gateway ID"
+    value={form["Gateway ID"]}
+    onChange={(e) =>
+      setForm({ ...form, "Gateway ID": parseInt(e.target.value) || 0 })
+    }
+  />
+
+  <input
+    className="w-full border px-3 py-2 rounded"
+    placeholder="Gateway EUI"
+    value={form["Gateway EUI"]}
+    onChange={(e) =>
+      setForm({ ...form, "Gateway EUI": e.target.value })
+    }
+  />
+
+  <input
+    className="w-full border px-3 py-2 rounded"
+    placeholder="Gateway Name"
+    value={form["Gateway Name"]}
+    onChange={(e) =>
+      setForm({ ...form, "Gateway Name": e.target.value })
+    }
+  />
+
+  <textarea
+    className="w-full border px-3 py-2 rounded"
+    placeholder="Gateway Description"
+    value={form["Gateway Description"]}
+    onChange={(e) =>
+      setForm({ ...form, "Gateway Description": e.target.value })
+    }
+    rows={3}
+  />
+
+  <select
+    className="w-full border px-3 py-2 rounded"
+    value={form["Antenna Placement"]}
+    onChange={(e) =>
+      setForm({ ...form, "Antenna Placement": e.target.value })
+    }
+  >
+    <option value="Indoor">Indoor</option>
+    <option value="Outdoor">Outdoor</option>
+  </select>
 </div>
 
 

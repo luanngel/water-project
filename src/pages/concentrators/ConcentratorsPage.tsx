@@ -1,20 +1,16 @@
 import { useState, useEffect, useMemo } from "react";
 import { Plus, Trash2, Pencil, RefreshCcw } from "lucide-react";
 import MaterialTable from "@material-table/core";
-import { fetchProjects, createConcentrator } from "./concentrators.api";
+import { fetchProjectNames } from "../../api/projects";
+import {
+  fetchConcentrators,
+  createConcentrator,
+  updateConcentrator,
+  deleteConcentrator,
+  type Concentrator,
+} from "../../api/concentrators";
 
 /* ================= TYPES ================= */
-interface Concentrator {
-  "Area Name": string;
-  "Device S/N": string;
-  "Device Name": string;
-  "Device Time": string;
-  "Device Status": string;
-  "Operator": string;
-  "Installed Time": string;
-  "Communication Time": string;
-  "Instruction Manual": string;
-}
 
 interface User {
   name: string;
@@ -33,15 +29,16 @@ export default function ConcentratorsPage() {
 
   const [allProjects, setAllProjects] = useState<string[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
+  const [loadingConcentrators, setLoadingConcentrators] = useState(true);
 
   useEffect(() => {
     const loadProjects = async () => {
       try {
-        const projects = await fetchProjects();
+        const projects = await fetchProjectNames();
         setAllProjects(projects);
       } catch (error) {
         console.error('Error loading projects:', error);
-        setAllProjects(["GRH (PADRE)", "CESPT", "Proyecto A", "Proyecto B"]);
+        setAllProjects([]);
       } finally {
         setLoadingProjects(false);
       }
@@ -61,6 +58,7 @@ export default function ConcentratorsPage() {
   );
 
   const [selectedProject, setSelectedProject] = useState("");
+  const [concentrators, setConcentrators] = useState<Concentrator[]>([]);
 
   useEffect(() => {
     if (visibleProjects.length > 0 && !selectedProject) {
@@ -68,41 +66,22 @@ export default function ConcentratorsPage() {
     }
   }, [visibleProjects, selectedProject]);
 
-  const [concentrators, setConcentrators] = useState<Concentrator[]>([
-    {
-      "Area Name": "GRH (PADRE)",
-      "Device S/N": "SN001",
-      "Device Name": "Concentrador A",
-      "Device Time": "2025-12-17T10:00:00Z",
-      "Device Status": "ACTIVE",
-      "Operator": "Operador 1",
-      "Installed Time": "2025-12-17",
-      "Communication Time": "2025-12-17T10:30:00Z",
-      "Instruction Manual": "Manual A",
-    },
-    {
-      "Area Name": "CESPT",
-      "Device S/N": "SN002",
-      "Device Name": "Concentrador B",
-      "Device Time": "2025-12-16T11:00:00Z",
-      "Device Status": "INACTIVE",
-      "Operator": "Operador 2",
-      "Installed Time": "2025-12-16",
-      "Communication Time": "2025-12-16T11:30:00Z",
-      "Instruction Manual": "Manual B",
-    },
-    {
-      "Area Name": "Proyecto A",
-      "Device S/N": "SN003",
-      "Device Name": "Concentrador C",
-      "Device Time": "2025-12-15T12:00:00Z",
-      "Device Status": "ACTIVE",
-      "Operator": "Operador 3",
-      "Installed Time": "2025-12-15",
-      "Communication Time": "2025-12-15T12:30:00Z",
-      "Instruction Manual": "Manual C",
-    },
-  ]);
+  const loadConcentrators = async () => {
+    setLoadingConcentrators(true);
+    try {
+      const data = await fetchConcentrators();
+      setConcentrators(data);
+    } catch (error) {
+      console.error("Error loading concentrators:", error);
+      setConcentrators([]);
+    } finally {
+      setLoadingConcentrators(false);
+    }
+  };
+
+  useEffect(() => {
+    loadConcentrators();
+  }, []);
 
   const [activeConcentrator, setActiveConcentrator] = useState<Concentrator | null>(null);
   const [search, setSearch] = useState("");
@@ -128,14 +107,20 @@ export default function ConcentratorsPage() {
   const handleSave = async () => {
     try {
       if (editingSerial) {
+        const concentratorToUpdate = concentrators.find(c => c["Device S/N"] === editingSerial);
+        if (!concentratorToUpdate) {
+          throw new Error("Concentrator to update not found");
+        }
+
+        const updatedConcentrator = await updateConcentrator(concentratorToUpdate.id, form);
         setConcentrators((prev) =>
           prev.map((c) =>
-            c["Device S/N"] === editingSerial ? { ...form } : c
+            c.id === concentratorToUpdate.id ? updatedConcentrator : c
           )
         );
       } else {
-        await createConcentrator(form);
-        setConcentrators((prev) => [...prev, { ...form }]);
+        const newConcentrator = await createConcentrator(form);
+        setConcentrators((prev) => [...prev, newConcentrator]);
       }
       setShowModal(false);
       setEditingSerial(null);
@@ -143,20 +128,35 @@ export default function ConcentratorsPage() {
       setActiveConcentrator(null);
     } catch (error) {
       console.error('Error saving concentrator:', error);
-      setConcentrators((prev) => [...prev, { ...form }]);
-      setShowModal(false);
-      setEditingSerial(null);
-      setForm({ ...getEmptyConcentrator(), "Area Name": selectedProject });
-      setActiveConcentrator(null);
+      alert(
+        `Error saving concentrator: ${
+          error instanceof Error ? error.message : "Please try again."
+        }`
+      );
     }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!activeConcentrator) return;
-    setConcentrators((prev) =>
-      prev.filter((c) => c["Device S/N"] !== activeConcentrator["Device S/N"])
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete the concentrator "${activeConcentrator["Device Name"]}"?`
     );
-    setActiveConcentrator(null);
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteConcentrator(activeConcentrator.id);
+      setConcentrators((prev) => prev.filter((c) => c.id !== activeConcentrator.id));
+      setActiveConcentrator(null);
+    } catch (error) {
+      console.error("Error deleting concentrator:", error);
+      alert(
+        `Error deleting concentrator: ${
+          error instanceof Error ? error.message : "Please try again."
+        }`
+      );
+    }
   };
 
   /* ================= FILTER ================= */
@@ -180,10 +180,12 @@ export default function ConcentratorsPage() {
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
           className="w-full border px-3 py-2 rounded"
-          disabled={loadingProjects}
+          disabled={loadingProjects || visibleProjects.length === 0}
         >
           {loadingProjects ? (
             <option>Loading projects...</option>
+          ) : visibleProjects.length === 0 ? (
+            <option>No projects available</option>
           ) : (
             visibleProjects.map((proj) => (
               <option key={proj} value={proj}>
@@ -192,6 +194,12 @@ export default function ConcentratorsPage() {
             ))
           )}
         </select>
+
+        {visibleProjects.length === 0 && !loadingProjects && (
+          <p className="text-sm text-gray-500 mt-2">
+            No projects available. Please contact your administrator.
+          </p>
+        )}
       </div>
 
       {/* MAIN */}
@@ -213,7 +221,8 @@ export default function ConcentratorsPage() {
                 setEditingSerial(null);
                 setShowModal(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-[#4c5f9e] rounded-lg"
+              disabled={!selectedProject || visibleProjects.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-white text-[#4c5f9e] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={16} /> Add
             </button>
@@ -222,7 +231,17 @@ export default function ConcentratorsPage() {
               onClick={() => {
                 if (!activeConcentrator) return;
                 setEditingSerial(activeConcentrator["Device S/N"]);
-                setForm(activeConcentrator);
+                setForm({
+                  "Area Name": activeConcentrator["Area Name"],
+                  "Device S/N": activeConcentrator["Device S/N"],
+                  "Device Name": activeConcentrator["Device Name"],
+                  "Device Time": activeConcentrator["Device Time"],
+                  "Device Status": activeConcentrator["Device Status"],
+                  "Operator": activeConcentrator["Operator"],
+                  "Installed Time": activeConcentrator["Installed Time"],
+                  "Communication Time": activeConcentrator["Communication Time"],
+                  "Instruction Manual": activeConcentrator["Instruction Manual"],
+                });
                 setShowModal(true);
               }}
               disabled={!activeConcentrator}
@@ -240,18 +259,11 @@ export default function ConcentratorsPage() {
             </button>
 
             <button
-  onClick={() => {
-    setSearch("");
-    setActiveConcentrator(null);
-    setShowModal(false);
-    setEditingSerial(null);
-    setForm(getEmptyConcentrator());
-  }}
-  className="flex items-center gap-2 px-4 py-2 border border-white/40 rounded-lg"
->
-  <RefreshCcw size={16} /> Refresh
-</button>
-
+              onClick={loadConcentrators}
+              className="flex items-center gap-2 px-4 py-2 border border-white/40 rounded-lg"
+            >
+              <RefreshCcw size={16} /> Refresh
+            </button>
           </div>
         </div>
 
@@ -266,6 +278,7 @@ export default function ConcentratorsPage() {
         {/* TABLE */}
         <MaterialTable
           title="Concentrators"
+          isLoading={loadingConcentrators}
           columns={[
             { title: "Device Name", field: "Device Name" },
             { title: "Device S/N", field: "Device S/N" },
@@ -297,10 +310,17 @@ export default function ConcentratorsPage() {
             sorting: true,
             rowStyle: (rowData) => ({
               backgroundColor:
-                activeConcentrator?.["Device S/N"] === (rowData as Concentrator)["Device S/N"]
+                activeConcentrator?.id === (rowData as Concentrator).id
                   ? "#EEF2FF"
                   : "#FFFFFF",
             }),
+          }}
+          localization={{
+            body: {
+              emptyDataSourceMessage: loadingConcentrators
+                ? "Loading concentrators..."
+                : "No concentrators found. Click 'Add' to create your first concentrator.",
+            },
           }}
         />
       </div>

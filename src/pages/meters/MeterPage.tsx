@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Plus, Trash2, Pencil, RefreshCcw } from "lucide-react";
 import MaterialTable from "@material-table/core";
+import { fetchProjectNames } from "../../api/projects";
+import {
+  fetchMeters,
+  createMeter,
+  updateMeter,
+  deleteMeter,
+  type Meter,
+} from "../../api/meters";
 
 /* ================= TYPES ================= */
-export interface Meter {
-  id: string; // recordId
-  serialNumber: string;
-  status: "ACTIVE" | "INACTIVE";
-  project: string;
-  createdAt: string;
-}
 
 interface User {
   name: string;
@@ -26,47 +27,45 @@ export default function MeterManagement() {
     project: "CESPT",
   };
 
-  // Lista de proyectos disponibles
-  const allProjects = ["GRH (PADRE)", "CESPT", "Proyecto A", "Proyecto B"];
+  const [allProjects, setAllProjects] = useState<string[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
 
   // Proyectos visibles según el usuario
-  const visibleProjects =
+  const visibleProjects = useMemo(() =>
     currentUser.role === "SUPER_ADMIN"
       ? allProjects
       : currentUser.project
       ? [currentUser.project]
-      : [];
-
-  const [selectedProject, setSelectedProject] = useState(
-    visibleProjects[0] || ""
+      : [],
+    [allProjects, currentUser.role, currentUser.project]
   );
 
-  // Datos locales iniciales (simulan la API)
-  const initialMeters: Meter[] = [
-    {
-      id: "1",
-      serialNumber: "SN001",
-      status: "ACTIVE",
-      project: "GRH (PADRE)",
-      createdAt: "2025-12-17",
-    },
-    {
-      id: "2",
-      serialNumber: "SN002",
-      status: "INACTIVE",
-      project: "CESPT",
-      createdAt: "2025-12-16",
-    },
-    {
-      id: "3",
-      serialNumber: "SN003",
-      status: "ACTIVE",
-      project: "Proyecto A",
-      createdAt: "2025-12-15",
-    },
-  ];
+  const [selectedProject, setSelectedProject] = useState("");
 
-  const [meters, setMeters] = useState<Meter[]>(initialMeters);
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        const projects = await fetchProjectNames();
+        setAllProjects(projects);
+      } catch (error) {
+        console.error('Error loading projects:', error);
+        setAllProjects([]);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+
+    loadProjects();
+  }, []);
+
+  useEffect(() => {
+    if (visibleProjects.length > 0 && !selectedProject) {
+      setSelectedProject(visibleProjects[0]);
+    }
+  }, [visibleProjects, selectedProject]);
+
+  const [meters, setMeters] = useState<Meter[]>([]);
+  const [loadingMeters, setLoadingMeters] = useState(true);
   const [activeMeter, setActiveMeter] = useState<Meter | null>(null);
   const [search, setSearch] = useState("");
 
@@ -74,54 +73,113 @@ export default function MeterManagement() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const emptyMeter: Omit<Meter, "id"> = {
-    serialNumber: "",
-    status: "ACTIVE",
-    project: selectedProject,
-    createdAt: new Date().toISOString().slice(0, 10),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    areaName: "",
+    accountNumber: null,
+    userName: null,
+    userAddress: null,
+    meterSerialNumber: "",
+    meterName: "",
+    meterStatus: "Installed",
+    protocolType: "",
+    priceNo: null,
+    priceName: null,
+    dmaPartition: null,
+    supplyTypes: "",
+    deviceId: "",
+    deviceName: "",
+    deviceType: "",
+    usageAnalysisType: "",
+    installedTime: new Date().toISOString(),
   };
 
   const [form, setForm] = useState<Omit<Meter, "id">>(emptyMeter);
 
-  /* ================= CRUD LOCAL ================= */
-  const handleSave = () => {
-    if (editingId) {
-      setMeters((prev) =>
-        prev.map((m) =>
-          m.id === editingId ? { ...m, ...form } : m
-        )
-      );
-    } else {
-      const newMeter: Meter = {
-        id: (Math.random() * 1000000).toFixed(0),
-        ...form,
-      };
-      setMeters((prev) => [...prev, newMeter]);
+  const loadMeters = async () => {
+    setLoadingMeters(true);
+    try {
+      const data = await fetchMeters();
+      setMeters(data);
+    } catch (error) {
+      console.error("Error loading meters:", error);
+      setMeters([]);
+    } finally {
+      setLoadingMeters(false);
     }
-
-    setShowModal(false);
-    setEditingId(null);
-    setForm({ ...emptyMeter, project: selectedProject });
-    setActiveMeter(null);
   };
 
-  const handleDelete = () => {
+  useEffect(() => {
+    loadMeters();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      if (editingId) {
+        const meterToUpdate = meters.find(m => m.id === editingId);
+        if (!meterToUpdate) {
+          throw new Error("Meter to update not found");
+        }
+
+        const updatedMeter = await updateMeter(editingId, form);
+        setMeters((prev) =>
+          prev.map((m) =>
+            m.id === editingId ? updatedMeter : m
+          )
+        );
+      } else {
+        const newMeter = await createMeter(form);
+        setMeters((prev) => [...prev, newMeter]);
+      }
+      setShowModal(false);
+      setEditingId(null);
+      setForm(emptyMeter);
+      setActiveMeter(null);
+    } catch (error) {
+      console.error('Error saving meter:', error);
+      alert(
+        `Error saving meter: ${
+          error instanceof Error ? error.message : "Please try again."
+        }`
+      );
+    }
+  };
+
+  const handleDelete = async () => {
     if (!activeMeter) return;
-    setMeters((prev) => prev.filter((m) => m.id !== activeMeter.id));
-    setActiveMeter(null);
+
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete the meter "${activeMeter.meterName}" (${activeMeter.meterSerialNumber})?`
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteMeter(activeMeter.id);
+      setMeters((prev) => prev.filter((m) => m.id !== activeMeter.id));
+      setActiveMeter(null);
+    } catch (error) {
+      console.error("Error deleting meter:", error);
+      alert(
+        `Error deleting meter: ${
+          error instanceof Error ? error.message : "Please try again."
+        }`
+      );
+    }
   };
 
   const handleRefresh = () => {
-    // Simula recargar los datos originales
-    setMeters(initialMeters);
+    loadMeters();
     setActiveMeter(null);
   };
 
   /* ================= FILTER ================= */
   const filtered = meters.filter(
     (m) =>
-      (m.serialNumber.toLowerCase().includes(search.toLowerCase()) ||
-        m.project.toLowerCase().includes(search.toLowerCase())) &&
-      m.project === selectedProject
+      (m.meterName.toLowerCase().includes(search.toLowerCase()) ||
+        m.meterSerialNumber.toLowerCase().includes(search.toLowerCase()) ||
+        m.deviceId.toLowerCase().includes(search.toLowerCase()) ||
+        m.areaName.toLowerCase().includes(search.toLowerCase()))
   );
 
   /* ================= UI ================= */
@@ -137,13 +195,26 @@ export default function MeterManagement() {
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
           className="w-full border px-3 py-2 rounded"
+          disabled={loadingProjects || visibleProjects.length === 0}
         >
-          {visibleProjects.map((proj) => (
-            <option key={proj} value={proj}>
-              {proj}
-            </option>
-          ))}
+          {loadingProjects ? (
+            <option>Loading projects...</option>
+          ) : visibleProjects.length === 0 ? (
+            <option>No projects available</option>
+          ) : (
+            visibleProjects.map((proj) => (
+              <option key={proj} value={proj}>
+                {proj}
+              </option>
+            ))
+          )}
         </select>
+
+        {visibleProjects.length === 0 && !loadingProjects && (
+          <p className="text-sm text-gray-500 mt-2">
+            No projects available. Please contact your administrator.
+          </p>
+        )}
       </div>
 
       {/* MAIN */}
@@ -164,11 +235,12 @@ export default function MeterManagement() {
           <div className="flex gap-3">
             <button
               onClick={() => {
-                setForm({ ...emptyMeter, project: selectedProject });
+                setForm(emptyMeter);
                 setEditingId(null);
                 setShowModal(true);
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-white text-[#4c5f9e] rounded-lg"
+              disabled={!selectedProject || visibleProjects.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-white text-[#4c5f9e] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={16} /> Add
             </button>
@@ -177,7 +249,27 @@ export default function MeterManagement() {
               onClick={() => {
                 if (!activeMeter) return;
                 setEditingId(activeMeter.id);
-                setForm({ ...activeMeter });
+                setForm({
+                  createdAt: activeMeter.createdAt,
+                  updatedAt: activeMeter.updatedAt,
+                  areaName: activeMeter.areaName,
+                  accountNumber: activeMeter.accountNumber,
+                  userName: activeMeter.userName,
+                  userAddress: activeMeter.userAddress,
+                  meterSerialNumber: activeMeter.meterSerialNumber,
+                  meterName: activeMeter.meterName,
+                  meterStatus: activeMeter.meterStatus,
+                  protocolType: activeMeter.protocolType,
+                  priceNo: activeMeter.priceNo,
+                  priceName: activeMeter.priceName,
+                  dmaPartition: activeMeter.dmaPartition,
+                  supplyTypes: activeMeter.supplyTypes,
+                  deviceId: activeMeter.deviceId,
+                  deviceName: activeMeter.deviceName,
+                  deviceType: activeMeter.deviceType,
+                  usageAnalysisType: activeMeter.usageAnalysisType,
+                  installedTime: activeMeter.installedTime,
+                });
                 setShowModal(true);
               }}
               disabled={!activeMeter}
@@ -206,7 +298,7 @@ export default function MeterManagement() {
         {/* SEARCH */}
         <input
           className="bg-white rounded-lg shadow px-4 py-2 text-sm"
-          placeholder="Search meter..."
+          placeholder="Search by meter name, serial number, device ID, or area..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -214,25 +306,32 @@ export default function MeterManagement() {
         {/* TABLE */}
         <MaterialTable
           title="Meters"
+          isLoading={loadingMeters}
           columns={[
-            { title: "Serial", field: "serialNumber" },
+            { title: "Meter Name", field: "meterName" },
+            { title: "Serial Number", field: "meterSerialNumber" },
+            { title: "Area", field: "areaName" },
+            { title: "Device ID", field: "deviceId" },
+            { title: "Device Name", field: "deviceName" },
             {
               title: "Status",
-              field: "status",
+              field: "meterStatus",
               render: (rowData) => (
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                    rowData.status === "ACTIVE"
-                      ? "text-blue-600 border-blue-600"
-                      : "text-red-600 border-red-600"
+                    rowData.meterStatus === "Installed"
+                      ? "text-green-600 border-green-600"
+                      : "text-gray-600 border-gray-600"
                   }`}
                 >
-                  {rowData.status}
+                  {rowData.meterStatus}
                 </span>
               ),
             },
-            { title: "Project", field: "project" },
-            { title: "Created", field: "createdAt", type: "date" },
+            { title: "Protocol", field: "protocolType" },
+            { title: "Device Type", field: "deviceType" },
+            { title: "Created At", field: "createdAt", type: "datetime" },
+            { title: "Updated At", field: "updatedAt", type: "datetime" },
           ]}
           data={filtered}
           onRowClick={(_, rowData) => setActiveMeter(rowData as Meter)}
@@ -248,55 +347,196 @@ export default function MeterManagement() {
                   : "#FFFFFF",
             }),
           }}
+          localization={{
+            body: {
+              emptyDataSourceMessage: loadingMeters
+                ? "Loading meters..."
+                : "No meters found. Click 'Add' to create your first meter.",
+            },
+          }}
         />
       </div>
 
       {/* MODAL */}
       {showModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-6 w-96 space-y-3">
+          <div className="bg-white rounded-xl p-6 w-96 max-h-[80vh] overflow-y-auto space-y-3">
             <h2 className="text-lg font-semibold">
               {editingId ? "Edit Meter" : "Add Meter"}
             </h2>
 
-            <input
-              className="w-full border px-3 py-2 rounded"
-              placeholder="Serial Number"
-              value={form.serialNumber}
-              onChange={(e) =>
-                setForm({ ...form, serialNumber: e.target.value })
-              }
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Meter Name</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Meter Name"
+                value={form.meterName}
+                onChange={(e) => setForm({ ...form, meterName: e.target.value })}
+              />
+            </div>
 
-            <button
-              onClick={() =>
-                setForm({
-                  ...form,
-                  status: form.status === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                })
-              }
-              className="w-full border rounded px-3 py-2"
-            >
-              Status: {form.status}
-            </button>
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Meter Serial Number</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Meter S/N"
+                value={form.meterSerialNumber}
+                onChange={(e) => setForm({ ...form, meterSerialNumber: e.target.value })}
+              />
+            </div>
 
-            <input
-              className="w-full border px-3 py-2 rounded"
-              placeholder="Project"
-              value={form.project}
-              onChange={(e) =>
-                setForm({ ...form, project: e.target.value })
-              }
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Area Name</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Area Name"
+                value={form.areaName}
+                onChange={(e) => setForm({ ...form, areaName: e.target.value })}
+              />
+            </div>
 
-            <input
-              type="date"
-              className="w-full border px-3 py-2 rounded"
-              value={form.createdAt}
-              onChange={(e) =>
-                setForm({ ...form, createdAt: e.target.value })
-              }
-            />
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Device ID</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Device ID"
+                value={form.deviceId}
+                onChange={(e) => setForm({ ...form, deviceId: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Device Name</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Device Name"
+                value={form.deviceName}
+                onChange={(e) => setForm({ ...form, deviceName: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Device Type</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Device Type"
+                value={form.deviceType}
+                onChange={(e) => setForm({ ...form, deviceType: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Meter Status</label>
+              <select
+                className="w-full border px-3 py-2 rounded"
+                value={form.meterStatus}
+                onChange={(e) => setForm({ ...form, meterStatus: e.target.value })}
+              >
+                <option value="Installed">Installed</option>
+                <option value="Uninstalled">Uninstalled</option>
+                <option value="Maintenance">Maintenance</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Protocol Type</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Protocol Type"
+                value={form.protocolType}
+                onChange={(e) => setForm({ ...form, protocolType: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Supply Types</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Supply Types"
+                value={form.supplyTypes}
+                onChange={(e) => setForm({ ...form, supplyTypes: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Usage Analysis Type</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Usage Analysis Type"
+                value={form.usageAnalysisType}
+                onChange={(e) => setForm({ ...form, usageAnalysisType: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Account Number</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Account Number (optional)"
+                value={form.accountNumber || ""}
+                onChange={(e) => setForm({ ...form, accountNumber: e.target.value || null })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">User Name</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="User Name (optional)"
+                value={form.userName || ""}
+                onChange={(e) => setForm({ ...form, userName: e.target.value || null })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">User Address</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="User Address (optional)"
+                value={form.userAddress || ""}
+                onChange={(e) => setForm({ ...form, userAddress: e.target.value || null })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Price No.</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Price No. (optional)"
+                value={form.priceNo || ""}
+                onChange={(e) => setForm({ ...form, priceNo: e.target.value || null })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Price Name</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="Price Name (optional)"
+                value={form.priceName || ""}
+                onChange={(e) => setForm({ ...form, priceName: e.target.value || null })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">DMA Partition</label>
+              <input
+                className="w-full border px-3 py-2 rounded"
+                placeholder="DMA Partition (optional)"
+                value={form.dmaPartition || ""}
+                onChange={(e) => setForm({ ...form, dmaPartition: e.target.value || null })}
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">Installed Time</label>
+              <input
+                type="datetime-local"
+                className="w-full border px-3 py-2 rounded"
+                value={form.installedTime ? new Date(form.installedTime).toISOString().slice(0, 16) : ""}
+                onChange={(e) => setForm({ ...form, installedTime: new Date(e.target.value).toISOString() })}
+              />
+            </div>
 
             <div className="flex justify-end gap-2 pt-3">
               <button onClick={() => setShowModal(false)}>Cancel</button>

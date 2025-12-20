@@ -10,20 +10,25 @@ const getAuthHeaders = () => ({
 export interface MeterRecord {
   id: string;
   fields: {
-    device_id: string;
-    meter_address: string;
-    manufacturer_code: string;
-    forward_cumulative_flow: number;
-    reverse_cumulative_flow: number;
-    forward_instantaneous_flow: number;
-    water_temperature: number;
-    voltage: number;
-    echo_amplitude: number;
-    ultrasonic_flight_time: number;
-    timestamp: string;
-    alarm_bytes: string;
-    checksum_ok: boolean;
-    received_at: string;
+    CreatedAt: string;
+    UpdatedAt: string;
+    "Area Name": string;
+    "Account Number": string | null;
+    "User Name": string | null;
+    "User Address": string | null;
+    "Meter S/N": string;
+    "Meter Name": string;
+    "Meter Status": string;
+    "Protocol Type": string;
+    "Price No.": string | null;
+    "Price Name": string | null;
+    "DMA Partition": string | null;
+    "Supply Types": string;
+    "Device ID": string;
+    "Device Name": string;
+    "Device Type": string;
+    "Usage Analysis Type": string;
+    "Installed Time": string;
   };
 }
 
@@ -37,20 +42,25 @@ export interface MetersResponse {
 
 export interface Meter {
   id: string;
+  createdAt: string;
+  updatedAt: string;
+  areaName: string;
+  accountNumber: string | null;
+  userName: string | null;
+  userAddress: string | null;
+  meterSerialNumber: string;
+  meterName: string;
+  meterStatus: string;
+  protocolType: string;
+  priceNo: string | null;
+  priceName: string | null;
+  dmaPartition: string | null;
+  supplyTypes: string;
   deviceId: string;
-  meterAddress: string;
-  manufacturerCode: string;
-  forwardCumulativeFlow: number;
-  reverseCumulativeFlow: number;
-  forwardInstantaneousFlow: number;
-  waterTemperature: number;
-  voltage: number;
-  echoAmplitude: number;
-  ultrasonicFlightTime: number;
-  timestamp: string;
-  alarmBytes: string;
-  checksumOk: boolean;
-  receivedAt: string;
+  deviceName: string;
+  deviceType: string;
+  usageAnalysisType: string;
+  installedTime: string;
 }
 
 export const fetchMeters = async (): Promise<Meter[]> => {
@@ -65,24 +75,31 @@ export const fetchMeters = async (): Promise<Meter[]> => {
     }
 
     const data: MetersResponse = await response.json();
-
-    return data.records.map((r: MeterRecord) => ({
+    const ans = data.records.map((r: MeterRecord) => ({
       id: r.id,
-      deviceId: r.fields.device_id || "",
-      meterAddress: r.fields.meter_address || "",
-      manufacturerCode: r.fields.manufacturer_code || "",
-      forwardCumulativeFlow: r.fields.forward_cumulative_flow || 0,
-      reverseCumulativeFlow: r.fields.reverse_cumulative_flow || 0,
-      forwardInstantaneousFlow: r.fields.forward_instantaneous_flow || 0,
-      waterTemperature: r.fields.water_temperature || 0,
-      voltage: r.fields.voltage || 0,
-      echoAmplitude: r.fields.echo_amplitude || 0,
-      ultrasonicFlightTime: r.fields.ultrasonic_flight_time || 0,
-      timestamp: r.fields.timestamp || "",
-      alarmBytes: r.fields.alarm_bytes || "",
-      checksumOk: r.fields.checksum_ok || false,
-      receivedAt: r.fields.received_at || "",
+      createdAt: r.fields.CreatedAt || "",
+      updatedAt: r.fields.UpdatedAt || "",
+      areaName: r.fields["Area Name"] || "",
+      accountNumber: r.fields["Account Number"] || null,
+      userName: r.fields["User Name"] || null,
+      userAddress: r.fields["User Address"] || null,
+      meterSerialNumber: r.fields["Meter S/N"] || "",
+      meterName: r.fields["Meter Name"] || "",
+      meterStatus: r.fields["Meter Status"] || "",
+      protocolType: r.fields["Protocol Type"] || "",
+      priceNo: r.fields["Price No."] || null,
+      priceName: r.fields["Price Name"] || null,
+      dmaPartition: r.fields["DMA Partition"] || null,
+      supplyTypes: r.fields["Supply Types"] || "",
+      deviceId: r.fields["Device ID"] || "",
+      deviceName: r.fields["Device Name"] || "",
+      deviceType: r.fields["Device Type"] || "",
+      usageAnalysisType: r.fields["Usage Analysis Type"] || "",
+      installedTime: r.fields["Installed Time"] || "",
     }));
+    console.log ("ans", ans);
+
+    return ans;
   } catch (error) {
     console.error("Error fetching meters:", error);
     throw error;
@@ -98,20 +115,25 @@ export const createMeter = async (
       headers: getAuthHeaders(),
       body: JSON.stringify({
         fields: {
-          device_id: meterData.deviceId,
-          meter_address: meterData.meterAddress,
-          manufacturer_code: meterData.manufacturerCode,
-          forward_cumulative_flow: meterData.forwardCumulativeFlow,
-          reverse_cumulative_flow: meterData.reverseCumulativeFlow,
-          forward_instantaneous_flow: meterData.forwardInstantaneousFlow,
-          water_temperature: meterData.waterTemperature,
-          voltage: meterData.voltage,
-          echo_amplitude: meterData.echoAmplitude,
-          ultrasonic_flight_time: meterData.ultrasonicFlightTime,
-          timestamp: meterData.timestamp,
-          alarm_bytes: meterData.alarmBytes,
-          checksum_ok: meterData.checksumOk,
-          received_at: meterData.receivedAt,
+          CreatedAt: meterData.createdAt,
+          UpdatedAt: meterData.updatedAt,
+          "Area Name": meterData.areaName,
+          "Account Number": meterData.accountNumber,
+          "User Name": meterData.userName,
+          "User Address": meterData.userAddress,
+          "Meter S/N": meterData.meterSerialNumber,
+          "Meter Name": meterData.meterName,
+          "Meter Status": meterData.meterStatus,
+          "Protocol Type": meterData.protocolType,
+          "Price No.": meterData.priceNo,
+          "Price Name": meterData.priceName,
+          "DMA Partition": meterData.dmaPartition,
+          "Supply Types": meterData.supplyTypes,
+          "Device ID": meterData.deviceId,
+          "Device Name": meterData.deviceName,
+          "Device Type": meterData.deviceType,
+          "Usage Analysis Type": meterData.usageAnalysisType,
+          "Installed Time": meterData.installedTime,
         },
       }),
     });
@@ -129,20 +151,25 @@ export const createMeter = async (
 
     return {
       id: createdRecord.id,
-      deviceId: createdRecord.fields.device_id || meterData.deviceId,
-      meterAddress: createdRecord.fields.meter_address || meterData.meterAddress,
-      manufacturerCode: createdRecord.fields.manufacturer_code || meterData.manufacturerCode,
-      forwardCumulativeFlow: createdRecord.fields.forward_cumulative_flow || meterData.forwardCumulativeFlow,
-      reverseCumulativeFlow: createdRecord.fields.reverse_cumulative_flow || meterData.reverseCumulativeFlow,
-      forwardInstantaneousFlow: createdRecord.fields.forward_instantaneous_flow || meterData.forwardInstantaneousFlow,
-      waterTemperature: createdRecord.fields.water_temperature || meterData.waterTemperature,
-      voltage: createdRecord.fields.voltage || meterData.voltage,
-      echoAmplitude: createdRecord.fields.echo_amplitude || meterData.echoAmplitude,
-      ultrasonicFlightTime: createdRecord.fields.ultrasonic_flight_time || meterData.ultrasonicFlightTime,
-      timestamp: createdRecord.fields.timestamp || meterData.timestamp,
-      alarmBytes: createdRecord.fields.alarm_bytes || meterData.alarmBytes,
-      checksumOk: createdRecord.fields.checksum_ok || meterData.checksumOk,
-      receivedAt: createdRecord.fields.received_at || meterData.receivedAt,
+      createdAt: createdRecord.fields.CreatedAt || meterData.createdAt,
+      updatedAt: createdRecord.fields.UpdatedAt || meterData.updatedAt,
+      areaName: createdRecord.fields["Area Name"] || meterData.areaName,
+      accountNumber: createdRecord.fields["Account Number"] || meterData.accountNumber,
+      userName: createdRecord.fields["User Name"] || meterData.userName,
+      userAddress: createdRecord.fields["User Address"] || meterData.userAddress,
+      meterSerialNumber: createdRecord.fields["Meter S/N"] || meterData.meterSerialNumber,
+      meterName: createdRecord.fields["Meter Name"] || meterData.meterName,
+      meterStatus: createdRecord.fields["Meter Status"] || meterData.meterStatus,
+      protocolType: createdRecord.fields["Protocol Type"] || meterData.protocolType,
+      priceNo: createdRecord.fields["Price No."] || meterData.priceNo,
+      priceName: createdRecord.fields["Price Name"] || meterData.priceName,
+      dmaPartition: createdRecord.fields["DMA Partition"] || meterData.dmaPartition,
+      supplyTypes: createdRecord.fields["Supply Types"] || meterData.supplyTypes,
+      deviceId: createdRecord.fields["Device ID"] || meterData.deviceId,
+      deviceName: createdRecord.fields["Device Name"] || meterData.deviceName,
+      deviceType: createdRecord.fields["Device Type"] || meterData.deviceType,
+      usageAnalysisType: createdRecord.fields["Usage Analysis Type"] || meterData.usageAnalysisType,
+      installedTime: createdRecord.fields["Installed Time"] || meterData.installedTime,
     };
   } catch (error) {
     console.error("Error creating meter:", error);
@@ -161,20 +188,25 @@ export const updateMeter = async (
       body: JSON.stringify({
         id: id,
         fields: {
-          device_id: meterData.deviceId,
-          meter_address: meterData.meterAddress,
-          manufacturer_code: meterData.manufacturerCode,
-          forward_cumulative_flow: meterData.forwardCumulativeFlow,
-          reverse_cumulative_flow: meterData.reverseCumulativeFlow,
-          forward_instantaneous_flow: meterData.forwardInstantaneousFlow,
-          water_temperature: meterData.waterTemperature,
-          voltage: meterData.voltage,
-          echo_amplitude: meterData.echoAmplitude,
-          ultrasonic_flight_time: meterData.ultrasonicFlightTime,
-          timestamp: meterData.timestamp,
-          alarm_bytes: meterData.alarmBytes,
-          checksum_ok: meterData.checksumOk,
-          received_at: meterData.receivedAt,
+          CreatedAt: meterData.createdAt,
+          UpdatedAt: meterData.updatedAt,
+          "Area Name": meterData.areaName,
+          "Account Number": meterData.accountNumber,
+          "User Name": meterData.userName,
+          "User Address": meterData.userAddress,
+          "Meter S/N": meterData.meterSerialNumber,
+          "Meter Name": meterData.meterName,
+          "Meter Status": meterData.meterStatus,
+          "Protocol Type": meterData.protocolType,
+          "Price No.": meterData.priceNo,
+          "Price Name": meterData.priceName,
+          "DMA Partition": meterData.dmaPartition,
+          "Supply Types": meterData.supplyTypes,
+          "Device ID": meterData.deviceId,
+          "Device Name": meterData.deviceName,
+          "Device Type": meterData.deviceType,
+          "Usage Analysis Type": meterData.usageAnalysisType,
+          "Installed Time": meterData.installedTime,
         },
       }),
     });
@@ -196,20 +228,25 @@ export const updateMeter = async (
 
     return {
       id: updatedRecord.id,
-      deviceId: updatedRecord.fields.device_id || meterData.deviceId,
-      meterAddress: updatedRecord.fields.meter_address || meterData.meterAddress,
-      manufacturerCode: updatedRecord.fields.manufacturer_code || meterData.manufacturerCode,
-      forwardCumulativeFlow: updatedRecord.fields.forward_cumulative_flow || meterData.forwardCumulativeFlow,
-      reverseCumulativeFlow: updatedRecord.fields.reverse_cumulative_flow || meterData.reverseCumulativeFlow,
-      forwardInstantaneousFlow: updatedRecord.fields.forward_instantaneous_flow || meterData.forwardInstantaneousFlow,
-      waterTemperature: updatedRecord.fields.water_temperature || meterData.waterTemperature,
-      voltage: updatedRecord.fields.voltage || meterData.voltage,
-      echoAmplitude: updatedRecord.fields.echo_amplitude || meterData.echoAmplitude,
-      ultrasonicFlightTime: updatedRecord.fields.ultrasonic_flight_time || meterData.ultrasonicFlightTime,
-      timestamp: updatedRecord.fields.timestamp || meterData.timestamp,
-      alarmBytes: updatedRecord.fields.alarm_bytes || meterData.alarmBytes,
-      checksumOk: updatedRecord.fields.checksum_ok || meterData.checksumOk,
-      receivedAt: updatedRecord.fields.received_at || meterData.receivedAt,
+      createdAt: updatedRecord.fields.CreatedAt || meterData.createdAt,
+      updatedAt: updatedRecord.fields.UpdatedAt || meterData.updatedAt,
+      areaName: updatedRecord.fields["Area Name"] || meterData.areaName,
+      accountNumber: updatedRecord.fields["Account Number"] || meterData.accountNumber,
+      userName: updatedRecord.fields["User Name"] || meterData.userName,
+      userAddress: updatedRecord.fields["User Address"] || meterData.userAddress,
+      meterSerialNumber: updatedRecord.fields["Meter S/N"] || meterData.meterSerialNumber,
+      meterName: updatedRecord.fields["Meter Name"] || meterData.meterName,
+      meterStatus: updatedRecord.fields["Meter Status"] || meterData.meterStatus,
+      protocolType: updatedRecord.fields["Protocol Type"] || meterData.protocolType,
+      priceNo: updatedRecord.fields["Price No."] || meterData.priceNo,
+      priceName: updatedRecord.fields["Price Name"] || meterData.priceName,
+      dmaPartition: updatedRecord.fields["DMA Partition"] || meterData.dmaPartition,
+      supplyTypes: updatedRecord.fields["Supply Types"] || meterData.supplyTypes,
+      deviceId: updatedRecord.fields["Device ID"] || meterData.deviceId,
+      deviceName: updatedRecord.fields["Device Name"] || meterData.deviceName,
+      deviceType: updatedRecord.fields["Device Type"] || meterData.deviceType,
+      usageAnalysisType: updatedRecord.fields["Usage Analysis Type"] || meterData.usageAnalysisType,
+      installedTime: updatedRecord.fields["Installed Time"] || meterData.installedTime,
     };
   } catch (error) {
     console.error("Error updating meter:", error);

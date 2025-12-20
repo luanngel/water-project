@@ -240,11 +240,18 @@ export default function ConcentratorsPage() {
             </button>
 
             <button
-              onClick={() => setConcentrators([...concentrators])}
-              className="flex items-center gap-2 px-4 py-2 border border-white/40 rounded-lg"
-            >
-              <RefreshCcw size={16} /> Refresh
-            </button>
+  onClick={() => {
+    setSearch("");
+    setActiveConcentrator(null);
+    setShowModal(false);
+    setEditingSerial(null);
+    setForm(getEmptyConcentrator());
+  }}
+  className="flex items-center gap-2 px-4 py-2 border border-white/40 rounded-lg"
+>
+  <RefreshCcw size={16} /> Refresh
+</button>
+
           </div>
         </div>
 
@@ -306,90 +313,90 @@ export default function ConcentratorsPage() {
               {editingSerial ? "Edit Concentrator" : "Add Concentrator"}
             </h2>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Device Name</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Enter device name"
-                value={form["Device Name"]}
-                onChange={(e) => setForm({ ...form, "Device Name": e.target.value })}
-              />
-            </div>
+            <div className="space-y-3">
+  <input
+    className="w-full border px-3 py-2 rounded"
+    placeholder="Device Name"
+    value={form["Device Name"]}
+    onChange={(e) =>
+      setForm({ ...form, "Device Name": e.target.value })
+    }
+  />
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Device S/N</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Enter device serial number"
-                value={form["Device S/N"]}
-                onChange={(e) => setForm({ ...form, "Device S/N": e.target.value })}
-              />
-            </div>
+  <input
+    className="w-full border px-3 py-2 rounded"
+    placeholder="Device S/N"
+    value={form["Device S/N"]}
+    onChange={(e) =>
+      setForm({ ...form, "Device S/N": e.target.value })
+    }
+  />
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Operator</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Enter operator name"
-                value={form["Operator"]}
-                onChange={(e) => setForm({ ...form, "Operator": e.target.value })}
-              />
-            </div>
+  <input
+    className="w-full border px-3 py-2 rounded"
+    placeholder="Operator"
+    value={form["Operator"]}
+    onChange={(e) =>
+      setForm({ ...form, "Operator": e.target.value })
+    }
+  />
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Instruction Manual</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Enter instruction manual"
-                value={form["Instruction Manual"]}
-                onChange={(e) => setForm({ ...form, "Instruction Manual": e.target.value })}
-              />
-            </div>
+  <input
+    className="w-full border px-3 py-2 rounded"
+    placeholder="Instruction Manual"
+    value={form["Instruction Manual"]}
+    onChange={(e) =>
+      setForm({ ...form, "Instruction Manual": e.target.value })
+    }
+  />
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Device Status</label>
-              <button
-                onClick={() =>
-                  setForm({
-                    ...form,
-                    "Device Status": form["Device Status"] === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-                  })
-                }
-                className="w-full border rounded px-3 py-2 hover:bg-gray-50"
-              >
-                Status: {form["Device Status"]}
-              </button>
-            </div>
+  <button
+    onClick={() =>
+      setForm({
+        ...form,
+        "Device Status":
+          form["Device Status"] === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+      })
+    }
+    className="w-full border rounded px-3 py-2 hover:bg-gray-50 text-left"
+  >
+    Device Status: {form["Device Status"]}
+  </button>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Installed Time</label>
-              <input
-                type="date"
-                className="w-full border px-3 py-2 rounded"
-                value={form["Installed Time"]}
-                onChange={(e) => setForm({ ...form, "Installed Time": e.target.value })}
-              />
-            </div>
+  <input
+    type="date"
+    className="w-full border px-3 py-2 rounded"
+    value={form["Installed Time"]}
+    onChange={(e) =>
+      setForm({ ...form, "Installed Time": e.target.value })
+    }
+  />
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Device Time</label>
-              <input
-                type="datetime-local"
-                className="w-full border px-3 py-2 rounded"
-                value={form["Device Time"].slice(0, 16)}
-                onChange={(e) => setForm({ ...form, "Device Time": new Date(e.target.value).toISOString() })}
-              />
-            </div>
+  <input
+    type="datetime-local"
+    className="w-full border px-3 py-2 rounded"
+    value={form["Device Time"].slice(0, 16)}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        "Device Time": new Date(e.target.value).toISOString(),
+      })
+    }
+  />
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Communication Time</label>
-              <input
-                type="datetime-local"
-                className="w-full border px-3 py-2 rounded"
-                value={form["Communication Time"].slice(0, 16)}
-                onChange={(e) => setForm({ ...form, "Communication Time": new Date(e.target.value).toISOString() })}
-              />
-            </div>
+  <input
+    type="datetime-local"
+    className="w-full border px-3 py-2 rounded"
+    value={form["Communication Time"].slice(0, 16)}
+    onChange={(e) =>
+      setForm({
+        ...form,
+        "Communication Time": new Date(e.target.value).toISOString(),
+      })
+    }
+  />
+</div>
+
 
             <div className="flex justify-end gap-2 pt-3">
               <button onClick={() => setShowModal(false)}>Cancel</button>

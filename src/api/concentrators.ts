@@ -19,11 +19,6 @@ export interface ConcentratorRecord {
     "Installed Time": string;
     "Communication Time": string;
     "Instruction Manual": string;
-    "Gateway ID": number;
-    "Gateway EUI": string;
-    "Gateway Name": string;
-    "Gateway Description": string;
-    "Antenna Placement": string;
   };
 }
 
@@ -46,11 +41,6 @@ export interface Concentrator {
   "Installed Time": string;
   "Communication Time": string;
   "Instruction Manual": string;
-  "Gateway ID": number;
-  "Gateway EUI": string;
-  "Gateway Name": string;
-  "Gateway Description": string;
-  "Antenna Placement": string;
 }
 
 export const fetchConcentrators = async (): Promise<Concentrator[]> => {
@@ -77,11 +67,6 @@ export const fetchConcentrators = async (): Promise<Concentrator[]> => {
       "Installed Time": r.fields["Installed Time"] || "",
       "Communication Time": r.fields["Communication Time"] || "",
       "Instruction Manual": r.fields["Instruction Manual"] || "",
-      "Gateway ID": r.fields["Gateway ID"] || 0,
-      "Gateway EUI": r.fields["Gateway EUI"] || "",
-      "Gateway Name": r.fields["Gateway Name"] || "",
-      "Gateway Description": r.fields["Gateway Description"] || "",
-      "Antenna Placement": r.fields["Antenna Placement"] || "Indoor",
     }));
   } catch (error) {
     console.error("Error fetching concentrators:", error);
@@ -107,11 +92,6 @@ export const createConcentrator = async (
           "Installed Time": concentratorData["Installed Time"],
           "Communication Time": concentratorData["Communication Time"],
           "Instruction Manual": concentratorData["Instruction Manual"],
-          "Gateway ID": concentratorData["Gateway ID"],
-          "Gateway EUI": concentratorData["Gateway EUI"],
-          "Gateway Name": concentratorData["Gateway Name"],
-          "Gateway Description": concentratorData["Gateway Description"],
-          "Antenna Placement": concentratorData["Antenna Placement"],
         },
       }),
     });
@@ -138,11 +118,6 @@ export const createConcentrator = async (
       "Installed Time": createdRecord.fields["Installed Time"] || concentratorData["Installed Time"],
       "Communication Time": createdRecord.fields["Communication Time"] || concentratorData["Communication Time"],
       "Instruction Manual": createdRecord.fields["Instruction Manual"] || concentratorData["Instruction Manual"],
-      "Gateway ID": createdRecord.fields["Gateway ID"] || concentratorData["Gateway ID"],
-      "Gateway EUI": createdRecord.fields["Gateway EUI"] || concentratorData["Gateway EUI"],
-      "Gateway Name": createdRecord.fields["Gateway Name"] || concentratorData["Gateway Name"],
-      "Gateway Description": createdRecord.fields["Gateway Description"] || concentratorData["Gateway Description"],
-      "Antenna Placement": createdRecord.fields["Antenna Placement"] || concentratorData["Antenna Placement"],
     };
   } catch (error) {
     console.error("Error creating concentrator:", error);
@@ -170,11 +145,6 @@ export const updateConcentrator = async (
           "Installed Time": concentratorData["Installed Time"],
           "Communication Time": concentratorData["Communication Time"],
           "Instruction Manual": concentratorData["Instruction Manual"],
-          "Gateway ID": concentratorData["Gateway ID"],
-          "Gateway EUI": concentratorData["Gateway EUI"],
-          "Gateway Name": concentratorData["Gateway Name"],
-          "Gateway Description": concentratorData["Gateway Description"],
-          "Antenna Placement": concentratorData["Antenna Placement"],
         },
       }),
     });
@@ -205,11 +175,6 @@ export const updateConcentrator = async (
       "Installed Time": updatedRecord.fields["Installed Time"] || concentratorData["Installed Time"],
       "Communication Time": updatedRecord.fields["Communication Time"] || concentratorData["Communication Time"],
       "Instruction Manual": updatedRecord.fields["Instruction Manual"] || concentratorData["Instruction Manual"],
-      "Gateway ID": updatedRecord.fields["Gateway ID"] || concentratorData["Gateway ID"],
-      "Gateway EUI": updatedRecord.fields["Gateway EUI"] || concentratorData["Gateway EUI"],
-      "Gateway Name": updatedRecord.fields["Gateway Name"] || concentratorData["Gateway Name"],
-      "Gateway Description": updatedRecord.fields["Gateway Description"] || concentratorData["Gateway Description"],
-      "Antenna Placement": updatedRecord.fields["Antenna Placement"] || concentratorData["Antenna Placement"],
     };
   } catch (error) {
     console.error("Error updating concentrator:", error);

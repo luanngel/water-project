@@ -18,6 +18,15 @@ interface User {
   project?: string; // asignado si no es superadmin
 }
 
+interface GatewayData {
+  "Gateway ID": number;
+  "Gateway EUI": string;
+  "Gateway Name": string;
+  "Gateway Description": string;
+  "Antenna Placement": "Indoor" | "Outdoor";
+  concentratorId?: string;
+}
+
 /* ================= COMPONENT ================= */
 export default function ConcentratorsPage() {
   // Simulación de usuario actual
@@ -99,6 +108,9 @@ export default function ConcentratorsPage() {
     "Installed Time": new Date().toISOString().slice(0, 10),
     "Communication Time": new Date().toISOString(),
     "Instruction Manual": "",
+  });
+
+  const getEmptyGatewayData = (): GatewayData => ({
     "Gateway ID": 0,
     "Gateway EUI": "",
     "Gateway Name": "",
@@ -107,10 +119,51 @@ export default function ConcentratorsPage() {
   });
 
   const [form, setForm] = useState<Omit<Concentrator, "id">>(getEmptyConcentrator());
+  const [gatewayForm, setGatewayForm] = useState<GatewayData>(getEmptyGatewayData());
+  const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
 
   /* ================= CRUD ================= */
+  const createOrUpdateGateway = async (gatewayData: GatewayData): Promise<void> => {
+  //await fetch('/api/gateways', { method: 'POST', body: JSON.stringify(gatewayData) })
+    
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        console.log('Gateway data that would be sent to API:', gatewayData);
+        resolve();
+      }, 500);
+    });
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: { [key: string]: boolean } = {};
+
+    if (!form["Device Name"].trim()) newErrors["Device Name"] = true;
+    if (!form["Device S/N"].trim()) newErrors["Device S/N"] = true;
+    if (!form["Operator"].trim()) newErrors["Operator"] = true;
+    if (!form["Instruction Manual"].trim()) newErrors["Instruction Manual"] = true;
+    if (!form["Installed Time"]) newErrors["Installed Time"] = true;
+    if (!form["Device Time"]) newErrors["Device Time"] = true;
+    if (!form["Communication Time"]) newErrors["Communication Time"] = true;
+
+    if (!gatewayForm["Gateway ID"] || gatewayForm["Gateway ID"] === 0) {
+      newErrors["Gateway ID"] = true;
+    }
+    if (!gatewayForm["Gateway EUI"].trim()) newErrors["Gateway EUI"] = true;
+    if (!gatewayForm["Gateway Name"].trim()) newErrors["Gateway Name"] = true;
+    if (!gatewayForm["Gateway Description"].trim()) newErrors["Gateway Description"] = true;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     try {
+      let savedConcentrator: Concentrator;
+
       if (editingSerial) {
         const concentratorToUpdate = concentrators.find(c => c["Device S/N"] === editingSerial);
         if (!concentratorToUpdate) {
@@ -123,13 +176,30 @@ export default function ConcentratorsPage() {
             c.id === concentratorToUpdate.id ? updatedConcentrator : c
           )
         );
+        savedConcentrator = updatedConcentrator;
       } else {
         const newConcentrator = await createConcentrator(form);
         setConcentrators((prev) => [...prev, newConcentrator]);
+        savedConcentrator = newConcentrator;
       }
+
+      try {
+        const gatewayDataWithRef = {
+          ...gatewayForm,
+          concentratorId: savedConcentrator.id,
+        };
+        await createOrUpdateGateway(gatewayDataWithRef);
+        console.log('Gateway data saved successfully');
+      } catch (gatewayError) {
+        console.error('Error saving gateway data:', gatewayError);
+        alert('Concentrator saved, but there was an error saving gateway data.');
+      }
+
       setShowModal(false);
       setEditingSerial(null);
       setForm({ ...getEmptyConcentrator(), "Area Name": selectedProject });
+      setGatewayForm(getEmptyGatewayData());
+      setErrors({});
       setActiveConcentrator(null);
     } catch (error) {
       console.error('Error saving concentrator:', error);
@@ -223,6 +293,8 @@ export default function ConcentratorsPage() {
             <button
               onClick={() => {
                 setForm({ ...getEmptyConcentrator(), "Area Name": selectedProject });
+                setGatewayForm(getEmptyGatewayData());
+                setErrors({});
                 setEditingSerial(null);
                 setShowModal(true);
               }}
@@ -246,12 +318,9 @@ export default function ConcentratorsPage() {
                   "Installed Time": activeConcentrator["Installed Time"],
                   "Communication Time": activeConcentrator["Communication Time"],
                   "Instruction Manual": activeConcentrator["Instruction Manual"],
-                  "Gateway ID": activeConcentrator["Gateway ID"],
-                  "Gateway EUI": activeConcentrator["Gateway EUI"],
-                  "Gateway Name": activeConcentrator["Gateway Name"],
-                  "Gateway Description": activeConcentrator["Gateway Description"],
-                  "Antenna Placement": activeConcentrator["Antenna Placement"],
                 });
+                setGatewayForm(getEmptyGatewayData());
+                setErrors({});
                 setShowModal(true);
               }}
               disabled={!activeConcentrator}
@@ -337,151 +406,303 @@ export default function ConcentratorsPage() {
 
       {/* MODAL */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-6 w-96 space-y-3">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-[600px] max-h-[90vh] overflow-y-auto space-y-4">
             <h2 className="text-lg font-semibold">
               {editingSerial ? "Edit Concentrator" : "Add Concentrator"}
             </h2>
 
             <div className="space-y-3">
-  <input
-    className="w-full border px-3 py-2 rounded"
-    placeholder="Device Name"
-    value={form["Device Name"]}
-    onChange={(e) =>
-      setForm({ ...form, "Device Name": e.target.value })
-    }
-  />
+              <h3 className="text-sm font-semibold text-gray-700 border-b pb-2">
+                Concentrator Information
+              </h3>
+              
+              <div>
+                <input
+                  className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors["Device Name"] ? "border-red-500" : ""
+                  }`}
+                  placeholder="Device Name *"
+                  value={form["Device Name"]}
+                  onChange={(e) => {
+                    setForm({ ...form, "Device Name": e.target.value });
+                    if (errors["Device Name"]) {
+                      setErrors({ ...errors, "Device Name": false });
+                    }
+                  }}
+                  required
+                />
+                {errors["Device Name"] && (
+                  <p className="text-red-500 text-xs mt-1">This field is required</p>
+                )}
+              </div>
 
-  <input
-    className="w-full border px-3 py-2 rounded"
-    placeholder="Device S/N"
-    value={form["Device S/N"]}
-    onChange={(e) =>
-      setForm({ ...form, "Device S/N": e.target.value })
-    }
-  />
+              <div>
+                <input
+                  className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors["Device S/N"] ? "border-red-500" : ""
+                  }`}
+                  placeholder="Device S/N *"
+                  value={form["Device S/N"]}
+                  onChange={(e) => {
+                    setForm({ ...form, "Device S/N": e.target.value });
+                    if (errors["Device S/N"]) {
+                      setErrors({ ...errors, "Device S/N": false });
+                    }
+                  }}
+                  required
+                />
+                {errors["Device S/N"] && (
+                  <p className="text-red-500 text-xs mt-1">This field is required</p>
+                )}
+              </div>
 
-  <input
-    className="w-full border px-3 py-2 rounded"
-    placeholder="Operator"
-    value={form["Operator"]}
-    onChange={(e) =>
-      setForm({ ...form, "Operator": e.target.value })
-    }
-  />
+              <div>
+                <input
+                  className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors["Operator"] ? "border-red-500" : ""
+                  }`}
+                  placeholder="Operator *"
+                  value={form["Operator"]}
+                  onChange={(e) => {
+                    setForm({ ...form, "Operator": e.target.value });
+                    if (errors["Operator"]) {
+                      setErrors({ ...errors, "Operator": false });
+                    }
+                  }}
+                  required
+                />
+                {errors["Operator"] && (
+                  <p className="text-red-500 text-xs mt-1">This field is required</p>
+                )}
+              </div>
 
-  <input
-    className="w-full border px-3 py-2 rounded"
-    placeholder="Instruction Manual"
-    value={form["Instruction Manual"]}
-    onChange={(e) =>
-      setForm({ ...form, "Instruction Manual": e.target.value })
-    }
-  />
+              <div>
+                <input
+                  className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors["Instruction Manual"] ? "border-red-500" : ""
+                  }`}
+                  placeholder="Instruction Manual *"
+                  value={form["Instruction Manual"]}
+                  onChange={(e) => {
+                    setForm({ ...form, "Instruction Manual": e.target.value });
+                    if (errors["Instruction Manual"]) {
+                      setErrors({ ...errors, "Instruction Manual": false });
+                    }
+                  }}
+                  required
+                />
+                {errors["Instruction Manual"] && (
+                  <p className="text-red-500 text-xs mt-1">This field is required</p>
+                )}
+              </div>
 
-  <button
-    onClick={() =>
-      setForm({
-        ...form,
-        "Device Status":
-          form["Device Status"] === "ACTIVE" ? "INACTIVE" : "ACTIVE",
-      })
-    }
-    className="w-full border rounded px-3 py-2 hover:bg-gray-50 text-left"
-  >
-    Device Status: {form["Device Status"]}
-  </button>
+              <button
+                onClick={() =>
+                  setForm({
+                    ...form,
+                    "Device Status":
+                      form["Device Status"] === "ACTIVE" ? "INACTIVE" : "ACTIVE",
+                  })
+                }
+                className="w-full border rounded px-3 py-2 hover:bg-gray-50 text-left"
+              >
+                Device Status: {form["Device Status"]} *
+              </button>
 
-  <input
-    type="date"
-    className="w-full border px-3 py-2 rounded"
-    value={form["Installed Time"]}
-    onChange={(e) =>
-      setForm({ ...form, "Installed Time": e.target.value })
-    }
-  />
+              <div>
+                <input
+                  type="date"
+                  className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors["Installed Time"] ? "border-red-500" : ""
+                  }`}
+                  placeholder="Installed Time *"
+                  value={form["Installed Time"]}
+                  onChange={(e) => {
+                    setForm({ ...form, "Installed Time": e.target.value });
+                    if (errors["Installed Time"]) {
+                      setErrors({ ...errors, "Installed Time": false });
+                    }
+                  }}
+                  required
+                />
+                {errors["Installed Time"] && (
+                  <p className="text-red-500 text-xs mt-1">This field is required</p>
+                )}
+              </div>
 
-  <input
-    type="datetime-local"
-    className="w-full border px-3 py-2 rounded"
-    value={form["Device Time"].slice(0, 16)}
-    onChange={(e) =>
-      setForm({
-        ...form,
-        "Device Time": new Date(e.target.value).toISOString(),
-      })
-    }
-  />
+              <div>
+                <input
+                  type="datetime-local"
+                  className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors["Device Time"] ? "border-red-500" : ""
+                  }`}
+                  placeholder="Device Time *"
+                  value={form["Device Time"].slice(0, 16)}
+                  onChange={(e) => {
+                    setForm({
+                      ...form,
+                      "Device Time": new Date(e.target.value).toISOString(),
+                    });
+                    if (errors["Device Time"]) {
+                      setErrors({ ...errors, "Device Time": false });
+                    }
+                  }}
+                  required
+                />
+                {errors["Device Time"] && (
+                  <p className="text-red-500 text-xs mt-1">This field is required</p>
+                )}
+              </div>
 
-  <input
-    type="datetime-local"
-    className="w-full border px-3 py-2 rounded"
-    value={form["Communication Time"].slice(0, 16)}
-    onChange={(e) =>
-      setForm({
-        ...form,
-        "Communication Time": new Date(e.target.value).toISOString(),
-      })
-    }
-  />
+              <div>
+                <input
+                  type="datetime-local"
+                  className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors["Communication Time"] ? "border-red-500" : ""
+                  }`}
+                  placeholder="Communication Time *"
+                  value={form["Communication Time"].slice(0, 16)}
+                  onChange={(e) => {
+                    setForm({
+                      ...form,
+                      "Communication Time": new Date(e.target.value).toISOString(),
+                    });
+                    if (errors["Communication Time"]) {
+                      setErrors({ ...errors, "Communication Time": false });
+                    }
+                  }}
+                  required
+                />
+                {errors["Communication Time"] && (
+                  <p className="text-red-500 text-xs mt-1">This field is required</p>
+                )}
+              </div>
+            </div>
 
-  <input
-    type="number"
-    className="w-full border px-3 py-2 rounded"
-    placeholder="Gateway ID"
-    value={form["Gateway ID"]}
-    onChange={(e) =>
-      setForm({ ...form, "Gateway ID": parseInt(e.target.value) || 0 })
-    }
-  />
+            <div className="space-y-3 pt-4">
+              <h3 className="text-sm font-semibold text-gray-700 border-b pb-2">
+                Gateway Information
+              </h3>
 
-  <input
-    className="w-full border px-3 py-2 rounded"
-    placeholder="Gateway EUI"
-    value={form["Gateway EUI"]}
-    onChange={(e) =>
-      setForm({ ...form, "Gateway EUI": e.target.value })
-    }
-  />
+              <div>
+                <input
+                  type="number"
+                  className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors["Gateway ID"] ? "border-red-500" : ""
+                  }`}
+                  placeholder="Gateway ID *"
+                  value={gatewayForm["Gateway ID"] || ""}
+                  onChange={(e) => {
+                    setGatewayForm({
+                      ...gatewayForm,
+                      "Gateway ID": parseInt(e.target.value) || 0,
+                    });
+                    if (errors["Gateway ID"]) {
+                      setErrors({ ...errors, "Gateway ID": false });
+                    }
+                  }}
+                  required
+                  min="1"
+                />
+                {errors["Gateway ID"] && (
+                  <p className="text-red-500 text-xs mt-1">This field is required</p>
+                )}
+              </div>
 
-  <input
-    className="w-full border px-3 py-2 rounded"
-    placeholder="Gateway Name"
-    value={form["Gateway Name"]}
-    onChange={(e) =>
-      setForm({ ...form, "Gateway Name": e.target.value })
-    }
-  />
+              <div>
+                <input
+                  className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors["Gateway EUI"] ? "border-red-500" : ""
+                  }`}
+                  placeholder="Gateway EUI *"
+                  value={gatewayForm["Gateway EUI"]}
+                  onChange={(e) => {
+                    setGatewayForm({ ...gatewayForm, "Gateway EUI": e.target.value });
+                    if (errors["Gateway EUI"]) {
+                      setErrors({ ...errors, "Gateway EUI": false });
+                    }
+                  }}
+                  required
+                />
+                {errors["Gateway EUI"] && (
+                  <p className="text-red-500 text-xs mt-1">This field is required</p>
+                )}
+              </div>
 
-  <textarea
-    className="w-full border px-3 py-2 rounded"
-    placeholder="Gateway Description"
-    value={form["Gateway Description"]}
-    onChange={(e) =>
-      setForm({ ...form, "Gateway Description": e.target.value })
-    }
-    rows={3}
-  />
+              <div>
+                <input
+                  className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors["Gateway Name"] ? "border-red-500" : ""
+                  }`}
+                  placeholder="Gateway Name *"
+                  value={gatewayForm["Gateway Name"]}
+                  onChange={(e) => {
+                    setGatewayForm({ ...gatewayForm, "Gateway Name": e.target.value });
+                    if (errors["Gateway Name"]) {
+                      setErrors({ ...errors, "Gateway Name": false });
+                    }
+                  }}
+                  required
+                />
+                {errors["Gateway Name"] && (
+                  <p className="text-red-500 text-xs mt-1">This field is required</p>
+                )}
+              </div>
 
-  <select
-    className="w-full border px-3 py-2 rounded"
-    value={form["Antenna Placement"]}
-    onChange={(e) =>
-      setForm({ ...form, "Antenna Placement": e.target.value })
-    }
-  >
-    <option value="Indoor">Indoor</option>
-    <option value="Outdoor">Outdoor</option>
-  </select>
-</div>
+              <div>
+                <input
+                  className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                    errors["Gateway Description"] ? "border-red-500" : ""
+                  }`}
+                  placeholder="Gateway Description *"
+                  value={gatewayForm["Gateway Description"]}
+                  onChange={(e) => {
+                    setGatewayForm({
+                      ...gatewayForm,
+                      "Gateway Description": e.target.value,
+                    });
+                    if (errors["Gateway Description"]) {
+                      setErrors({ ...errors, "Gateway Description": false });
+                    }
+                  }}
+                  required
+                />
+                {errors["Gateway Description"] && (
+                  <p className="text-red-500 text-xs mt-1">This field is required</p>
+                )}
+              </div>
 
+              <select
+                className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                value={gatewayForm["Antenna Placement"]}
+                onChange={(e) =>
+                  setGatewayForm({
+                    ...gatewayForm,
+                    "Antenna Placement": e.target.value as "Indoor" | "Outdoor",
+                  })
+                }
+                required
+              >
+                <option value="Indoor">Indoor</option>
+                <option value="Outdoor">Outdoor</option>
+              </select>
+            </div>
 
-            <div className="flex justify-end gap-2 pt-3">
-              <button onClick={() => setShowModal(false)}>Cancel</button>
+            <div className="flex justify-end gap-2 pt-3 border-t">
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setGatewayForm(getEmptyGatewayData());
+                  setErrors({});
+                }}
+                className="px-4 py-2 rounded hover:bg-gray-100"
+              >
+                Cancel
+              </button>
               <button
                 onClick={handleSave}
-                className="bg-[#4c5f9e] text-white px-4 py-2 rounded"
+                className="bg-[#4c5f9e] text-white px-4 py-2 rounded hover:bg-[#3d4d7e]"
               >
                 Save
               </button>

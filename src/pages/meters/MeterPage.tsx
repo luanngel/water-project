@@ -358,198 +358,202 @@ export default function MeterManagement() {
       </div>
 
       {/* MODAL */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <div className="bg-white rounded-xl p-6 w-96 max-h-[80vh] overflow-y-auto space-y-3">
-            <h2 className="text-lg font-semibold">
-              {editingId ? "Edit Meter" : "Add Meter"}
-            </h2>
+{showModal && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+    <div className="bg-white rounded-xl p-6 w-96 max-h-[80vh] overflow-y-auto space-y-3">
+      <h2 className="text-lg font-semibold">
+        {editingId ? "Edit Meter" : "Add Meter"}
+      </h2>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Meter Name</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Meter Name"
-                value={form.meterName}
-                onChange={(e) => setForm({ ...form, meterName: e.target.value })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="Meter Name"
+          value={form.meterName}
+          onChange={(e) => setForm({ ...form, meterName: e.target.value })}
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Meter Serial Number</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Meter S/N"
-                value={form.meterSerialNumber}
-                onChange={(e) => setForm({ ...form, meterSerialNumber: e.target.value })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="Meter Serial Number"
+          value={form.meterSerialNumber}
+          onChange={(e) =>
+            setForm({ ...form, meterSerialNumber: e.target.value })
+          }
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Area Name</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Area Name"
-                value={form.areaName}
-                onChange={(e) => setForm({ ...form, areaName: e.target.value })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="Area Name"
+          value={form.areaName}
+          onChange={(e) => setForm({ ...form, areaName: e.target.value })}
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Device ID</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Device ID"
-                value={form.deviceId}
-                onChange={(e) => setForm({ ...form, deviceId: e.target.value })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="Device ID"
+          value={form.deviceId}
+          onChange={(e) => setForm({ ...form, deviceId: e.target.value })}
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Device Name</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Device Name"
-                value={form.deviceName}
-                onChange={(e) => setForm({ ...form, deviceName: e.target.value })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="Device Name"
+          value={form.deviceName}
+          onChange={(e) => setForm({ ...form, deviceName: e.target.value })}
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Device Type</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Device Type"
-                value={form.deviceType}
-                onChange={(e) => setForm({ ...form, deviceType: e.target.value })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="Device Type"
+          value={form.deviceType}
+          onChange={(e) => setForm({ ...form, deviceType: e.target.value })}
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Meter Status</label>
-              <select
-                className="w-full border px-3 py-2 rounded"
-                value={form.meterStatus}
-                onChange={(e) => setForm({ ...form, meterStatus: e.target.value })}
-              >
-                <option value="Installed">Installed</option>
-                <option value="Uninstalled">Uninstalled</option>
-                <option value="Maintenance">Maintenance</option>
-              </select>
-            </div>
+      <div className="space-y-1">
+        <select
+          className="w-full border px-3 py-2 rounded"
+          value={form.meterStatus}
+          onChange={(e) => setForm({ ...form, meterStatus: e.target.value })}
+        >
+          <option value="Installed">Meter Status: Installed</option>
+          <option value="Uninstalled">Meter Status: Uninstalled</option>
+          <option value="Maintenance">Meter Status: Maintenance</option>
+        </select>
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Protocol Type</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Protocol Type"
-                value={form.protocolType}
-                onChange={(e) => setForm({ ...form, protocolType: e.target.value })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="Protocol Type"
+          value={form.protocolType}
+          onChange={(e) => setForm({ ...form, protocolType: e.target.value })}
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Supply Types</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Supply Types"
-                value={form.supplyTypes}
-                onChange={(e) => setForm({ ...form, supplyTypes: e.target.value })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="Supply Types"
+          value={form.supplyTypes}
+          onChange={(e) => setForm({ ...form, supplyTypes: e.target.value })}
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Usage Analysis Type</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Usage Analysis Type"
-                value={form.usageAnalysisType}
-                onChange={(e) => setForm({ ...form, usageAnalysisType: e.target.value })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="Usage Analysis Type"
+          value={form.usageAnalysisType}
+          onChange={(e) =>
+            setForm({ ...form, usageAnalysisType: e.target.value })
+          }
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Account Number</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Account Number (optional)"
-                value={form.accountNumber || ""}
-                onChange={(e) => setForm({ ...form, accountNumber: e.target.value || null })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="Account Number (optional)"
+          value={form.accountNumber ?? ""}
+          onChange={(e) =>
+            setForm({ ...form, accountNumber: e.target.value || null })
+          }
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">User Name</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="User Name (optional)"
-                value={form.userName || ""}
-                onChange={(e) => setForm({ ...form, userName: e.target.value || null })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="User Name (optional)"
+          value={form.userName ?? ""}
+          onChange={(e) =>
+            setForm({ ...form, userName: e.target.value || null })
+          }
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">User Address</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="User Address (optional)"
-                value={form.userAddress || ""}
-                onChange={(e) => setForm({ ...form, userAddress: e.target.value || null })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="User Address (optional)"
+          value={form.userAddress ?? ""}
+          onChange={(e) =>
+            setForm({ ...form, userAddress: e.target.value || null })
+          }
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Price No.</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Price No. (optional)"
-                value={form.priceNo || ""}
-                onChange={(e) => setForm({ ...form, priceNo: e.target.value || null })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="Price No. (optional)"
+          value={form.priceNo ?? ""}
+          onChange={(e) => setForm({ ...form, priceNo: e.target.value || null })}
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Price Name</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="Price Name (optional)"
-                value={form.priceName || ""}
-                onChange={(e) => setForm({ ...form, priceName: e.target.value || null })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="Price Name (optional)"
+          value={form.priceName ?? ""}
+          onChange={(e) =>
+            setForm({ ...form, priceName: e.target.value || null })
+          }
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">DMA Partition</label>
-              <input
-                className="w-full border px-3 py-2 rounded"
-                placeholder="DMA Partition (optional)"
-                value={form.dmaPartition || ""}
-                onChange={(e) => setForm({ ...form, dmaPartition: e.target.value || null })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          className="w-full border px-3 py-2 rounded"
+          placeholder="DMA Partition (optional)"
+          value={form.dmaPartition ?? ""}
+          onChange={(e) =>
+            setForm({ ...form, dmaPartition: e.target.value || null })
+          }
+        />
+      </div>
 
-            <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Installed Time</label>
-              <input
-                type="datetime-local"
-                className="w-full border px-3 py-2 rounded"
-                value={form.installedTime ? new Date(form.installedTime).toISOString().slice(0, 16) : ""}
-                onChange={(e) => setForm({ ...form, installedTime: new Date(e.target.value).toISOString() })}
-              />
-            </div>
+      <div className="space-y-1">
+        <input
+          type="datetime-local"
+          className="w-full border px-3 py-2 rounded"
+          value={
+            form.installedTime
+              ? new Date(form.installedTime).toISOString().slice(0, 16)
+              : ""
+          }
+          onChange={(e) =>
+            setForm({ ...form, installedTime: new Date(e.target.value).toISOString() })
+          }
+        />
+      </div>
 
-            <div className="flex justify-end gap-2 pt-3">
-              <button onClick={() => setShowModal(false)}>Cancel</button>
-              <button
-                onClick={handleSave}
-                className="bg-[#4c5f9e] text-white px-4 py-2 rounded"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="flex justify-end gap-2 pt-3">
+        <button onClick={() => setShowModal(false)}>Cancel</button>
+        <button
+          onClick={handleSave}
+          className="bg-[#4c5f9e] text-white px-4 py-2 rounded"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

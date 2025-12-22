@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Plus, Trash2, Pencil, RefreshCcw } from "lucide-react";
 import MaterialTable from "@material-table/core";
-import { fetchProjectNames } from "../../api/projects";
 import {
   fetchConcentrators,
   createConcentrator,
@@ -40,22 +39,6 @@ export default function ConcentratorsPage() {
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [loadingConcentrators, setLoadingConcentrators] = useState(true);
 
-  useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        const projects = await fetchProjectNames();
-        setAllProjects(projects);
-      } catch (error) {
-        console.error('Error loading projects:', error);
-        setAllProjects([]);
-      } finally {
-        setLoadingProjects(false);
-      }
-    };
-
-    loadProjects();
-  }, []);
-
   // Proyectos visibles según el usuario
   const visibleProjects = useMemo(() =>
     currentUser.role === "SUPER_ADMIN"
@@ -79,12 +62,16 @@ export default function ConcentratorsPage() {
     setLoadingConcentrators(true);
     try {
       const data = await fetchConcentrators();
+      const projectsArray = data.map((record) => record["Area Name"]);
+      setAllProjects(projectsArray);
       setConcentrators(data);
     } catch (error) {
       console.error("Error loading concentrators:", error);
+      setAllProjects([]);
       setConcentrators([]);
     } finally {
       setLoadingConcentrators(false);
+      setLoadingProjects(false);
     }
   };
 

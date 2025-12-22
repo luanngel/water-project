@@ -51,12 +51,18 @@ export default function ConcentratorsPage() {
 
   const [selectedProject, setSelectedProject] = useState("");
   const [concentrators, setConcentrators] = useState<Concentrator[]>([]);
+  const [filteredConcentrators, setFilteredConcentrators] = useState<Concentrator[]>([]);
 
   useEffect(() => {
-    if (visibleProjects.length > 0 && !selectedProject) {
-      setSelectedProject(visibleProjects[0]);
+    if (selectedProject) {
+      const filtered = concentrators.filter(
+        (c) => c["Area Name"] === selectedProject
+      );
+      setFilteredConcentrators(filtered);
+    } else {
+      setFilteredConcentrators(concentrators);
     }
-  }, [visibleProjects, selectedProject]);
+  }, [selectedProject, concentrators]);
 
   const loadConcentrators = async () => {
     setLoadingConcentrators(true);
@@ -221,12 +227,10 @@ export default function ConcentratorsPage() {
     }
   };
 
-  /* ================= FILTER ================= */
-  const filtered = concentrators.filter(
+  const searchFiltered = filteredConcentrators.filter(
     (c) =>
-      (c["Device Name"].toLowerCase().includes(search.toLowerCase()) ||
-        c["Device S/N"].toLowerCase().includes(search.toLowerCase())) &&
-      c["Area Name"] === selectedProject
+      c["Device Name"].toLowerCase().includes(search.toLowerCase()) ||
+      c["Device S/N"].toLowerCase().includes(search.toLowerCase())
   );
 
   /* ================= UI ================= */
@@ -249,11 +253,14 @@ export default function ConcentratorsPage() {
           ) : visibleProjects.length === 0 ? (
             <option>No projects available</option>
           ) : (
-            visibleProjects.map((proj) => (
-              <option key={proj} value={proj}>
-                {proj}
-              </option>
-            ))
+            <>
+              <option value="">Select a project</option>
+              {visibleProjects.map((proj) => (
+                <option key={proj} value={proj}>
+                  {proj}
+                </option>
+              ))}
+            </>
           )}
         </select>
 
@@ -279,6 +286,7 @@ export default function ConcentratorsPage() {
           <div className="flex gap-3">
             <button
               onClick={() => {
+                if (!selectedProject) return;
                 setForm({ ...getEmptyConcentrator(), "Area Name": selectedProject });
                 setGatewayForm(getEmptyGatewayData());
                 setErrors({});
@@ -346,8 +354,8 @@ export default function ConcentratorsPage() {
           title="Concentrators"
           isLoading={loadingConcentrators}
           columns={[
-            { title: "Device Name", field: "Device Name" },
-            { title: "Device S/N", field: "Device S/N" },
+            { title: "Device Name", field: "Device Name", render: (rowData) => rowData["Device Name"] || "-" },
+            { title: "Device S/N", field: "Device S/N", render: (rowData) => rowData["Device S/N"] || "-" },
             {
               title: "Device Status",
               field: "Device Status",
@@ -359,15 +367,15 @@ export default function ConcentratorsPage() {
                       : "text-red-600 border-red-600"
                   }`}
                 >
-                  {rowData["Device Status"]}
+                  {rowData["Device Status"] || "-"}
                 </span>
               ),
             },
-            { title: "Operator", field: "Operator" },
-            { title: "Area Name", field: "Area Name" },
-            { title: "Installed Time", field: "Installed Time", type: "date" },
+            { title: "Operator", field: "Operator", render: (rowData) => rowData["Operator"] || "-" },
+            { title: "Area Name", field: "Area Name", render: (rowData) => rowData["Area Name"] || "-" },
+            { title: "Installed Time", field: "Installed Time", type: "date", render: (rowData) => rowData["Installed Time"] || "-" },
           ]}
-          data={filtered}
+          data={searchFiltered}
           onRowClick={(_, rowData) => setActiveConcentrator(rowData as Concentrator)}
           options={{
             actionsColumnIndex: -1,

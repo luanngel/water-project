@@ -1,4 +1,5 @@
 import { Cpu, Settings, BarChart3, Bell } from "lucide-react";
+import { useEffect, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -8,9 +9,42 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
+import { fetchMeters, Meter } from "../api/meters";
 import { Page } from "../App";
 
-export default function Home({ setPage }: { setPage: (page: Page) => void }) {
+export default function Home({ 
+  setPage, 
+  navigateToMetersWithProject 
+}: { 
+  setPage: (page: Page) => void;
+  navigateToMetersWithProject: (projectName: string) => void;
+}) {
+  const [allProjects, setAllProjects] = useState<string[]>([]);
+  const [meters, setMeters] = useState<Meter[]>([]);
+  
+
+  const loadMeters = async () => {
+    const data = await fetchMeters();
+    setMeters(data);
+    const projectsArray = [...new Set(data.map((record: Meter) => record["areaName"]))];
+    setAllProjects(projectsArray);
+  }
+  useEffect(() => {
+    loadMeters();
+  }, []);
+
+  const chartData = allProjects.map((projectName) => ({
+    name: projectName,
+    meterCount: meters.filter((meter) => meter.areaName === projectName).length,
+  }));
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleBarClick = (data: any) => {
+    if (data.activeLabel) {
+      navigateToMetersWithProject(data.activeLabel);
+    }
+  };
+
   // Datos de ejemplo para empresas
   const companies = [
     { name: "Empresa A", tomas: 12, alerts: 2, consumption: 320 },
@@ -119,19 +153,24 @@ export default function Home({ setPage }: { setPage: (page: Page) => void }) {
       {/* Gráfica de consumo */}
       <div className="bg-white rounded-xl shadow p-6">
         <h2 className="text-lg font-semibold mb-4">
-          Consumo de Agua por Empresa
+          Número de Medidores por Proyecto
         </h2>
         <div className="h-60">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={companies}
+              data={chartData}
               margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+              onClick={handleBarClick}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="consumption" fill="#4c5f9e" />
+              <Bar 
+                dataKey="meterCount" 
+                fill="#4c5f9e" 
+                cursor="pointer"
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>

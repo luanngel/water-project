@@ -18,12 +18,12 @@ interface DeviceData {
 }
 
 /* ================= COMPONENT ================= */
-export default function MeterManagement() {
+export default function MeterManagement({ selectedProject: initialProject }: { selectedProject?: string } = {}) {
   const [allProjects, setAllProjects] = useState<string[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
 
 
-  const [selectedProject, setSelectedProject] = useState("");
+  const [selectedProject, setSelectedProject] = useState(initialProject || "");
 
   const [meters, setMeters] = useState<Meter[]>([]);
   const [filteredMeters, setFilteredMeters] = useState<Meter[]>([]);
@@ -96,6 +96,12 @@ export default function MeterManagement() {
   useEffect(() => {
     loadMeters();
   }, []);
+
+  useEffect(() => {
+    if (initialProject) {
+      setSelectedProject(initialProject);
+    }
+  }, [initialProject]);
 
   const createOrUpdateDevice = async (deviceData: DeviceData): Promise<void> => {
     //await fetch('/api/devices', { method: 'POST', body: JSON.stringify(deviceData) })

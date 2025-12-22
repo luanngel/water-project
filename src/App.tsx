@@ -19,13 +19,20 @@ export type Page =
 
 export default function App() {
   const [page, setPage] = useState<Page>("home");
+  const [subPage, setSubPage] = useState<string>("default");
+  const [selectedProject, setSelectedProject] = useState<string>("");
+
+  const navigateToMetersWithProject = (projectName: string) => {
+    setSelectedProject(projectName);
+    setPage("meters");
+  };
 
   const renderPage = () => {
     switch (page) {
       case "projects":
         return <ProjectsPage />;
       case "meters":
-        return <MetersPage />;
+        return <MetersPage selectedProject={selectedProject} />;
       case "concentrators":
         return <ConcentratorsPage />;
       case "users":
@@ -34,7 +41,7 @@ export default function App() {
         return <RolesPage />;
       case "home":
       default:
-        return <Home setPage={setPage} />;
+        return <Home setPage={setPage} navigateToMetersWithProject={navigateToMetersWithProject} />;
     }
   };
 
@@ -42,7 +49,7 @@ export default function App() {
     <div className="flex h-screen">
       <Sidebar setPage={setPage} />
       <div className="flex-1 flex flex-col">
-        <TopMenu />
+        <TopMenu page={page} subPage={subPage} setSubPage={setSubPage} />
         <main className="flex-1 overflow-auto">
           {renderPage()}
         </main>

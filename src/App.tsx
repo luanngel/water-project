@@ -39,11 +39,21 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen">
-      <Sidebar setPage={setPage} />
-      <div className="flex-1 flex flex-col">
-        <TopMenu />
-        <main className="flex-1 overflow-auto">
+    // Blindaje global del layout
+    <div className="flex h-screen w-full overflow-hidden">
+      {/* Sidebar no debe encogerse */}
+      <div className="shrink-0">
+        <Sidebar setPage={setPage} />
+      </div>
+
+      {/* min-w-0: evita que páginas anchas (tablas) empujen el layout */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="shrink-0">
+          <TopMenu />
+        </div>
+
+        {/* Scroll solo aquí */}
+        <main className="min-w-0 flex-1 overflow-auto">
           {renderPage()}
         </main>
       </div>

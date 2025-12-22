@@ -3,8 +3,9 @@ export const PROJECTS_API_URL = `${API_BASE_URL}/api/v3/data/ppfu31vhv5gf6i0/m05
 const API_TOKEN = import.meta.env.VITE_API_TOKEN;
 
 export const getAuthHeaders = () => ({
-  Authorization: `Bearer ${API_TOKEN}`,
   "Content-Type": "application/json",
+  "xc-token": API_TOKEN,                 // NocoDB style
+  Authorization: `Bearer ${API_TOKEN}`,  // fallback por si el backend usa Bearer
 });
 
 export interface ProjectRecord {

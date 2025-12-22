@@ -34,7 +34,7 @@ export default function App() {
         return <RolesPage />;
       case "home":
       default:
-        return <Home />;
+        return <Home setPage={setPage} />;
     }
   };
 

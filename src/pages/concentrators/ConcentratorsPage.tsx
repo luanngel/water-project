@@ -62,7 +62,7 @@ export default function ConcentratorsPage() {
     setLoadingConcentrators(true);
     try {
       const data = await fetchConcentrators();
-      const projectsArray = data.map((record) => record["Area Name"]);
+      const projectsArray = [...new Set(data.map((record) => record["Area Name"]))];
       setAllProjects(projectsArray);
       setConcentrators(data);
     } catch (error) {

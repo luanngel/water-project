@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Trash2, Pencil, RefreshCcw } from "lucide-react";
 import MaterialTable from "@material-table/core";
-import { fetchProjectNames } from "../../api/projects";
 import {
   fetchMeters,
   createMeter,
@@ -9,14 +8,6 @@ import {
   deleteMeter,
   type Meter,
 } from "../../api/meters";
-
-/* ================= TYPES ================= */
-
-interface User {
-  name: string;
-  role: "SUPER_ADMIN" | "USER";
-  project?: string; // asignado si no es superadmin
-}
 
 interface DeviceData {
   "Device ID": number;
@@ -28,51 +19,14 @@ interface DeviceData {
 
 /* ================= COMPONENT ================= */
 export default function MeterManagement() {
-  // Simulación de usuario actual
-  const currentUser: User = {
-    name: "Admin GRH",
-    role: "SUPER_ADMIN", // cambiar a USER para probar otro caso
-    project: "CESPT",
-  };
-
   const [allProjects, setAllProjects] = useState<string[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
 
-  // Proyectos visibles según el usuario
-  const visibleProjects = useMemo(() =>
-    currentUser.role === "SUPER_ADMIN"
-      ? allProjects
-      : currentUser.project
-      ? [currentUser.project]
-      : [],
-    [allProjects, currentUser.role, currentUser.project]
-  );
 
   const [selectedProject, setSelectedProject] = useState("");
 
-  useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        const projects = await fetchProjectNames();
-        setAllProjects(projects);
-      } catch (error) {
-        console.error('Error loading projects:', error);
-        setAllProjects([]);
-      } finally {
-        setLoadingProjects(false);
-      }
-    };
-
-    loadProjects();
-  }, []);
-
-  useEffect(() => {
-    if (visibleProjects.length > 0 && !selectedProject) {
-      setSelectedProject(visibleProjects[0]);
-    }
-  }, [visibleProjects, selectedProject]);
-
   const [meters, setMeters] = useState<Meter[]>([]);
+  const [filteredMeters, setFilteredMeters] = useState<Meter[]>([]);
   const [loadingMeters, setLoadingMeters] = useState(true);
   const [activeMeter, setActiveMeter] = useState<Meter | null>(null);
   const [search, setSearch] = useState("");
@@ -109,6 +63,15 @@ export default function MeterManagement() {
     "AppKey": "",
   };
 
+  useEffect(() => {
+    if (selectedProject) {
+      const filtered = meters.filter((meter) => meter.areaName === selectedProject);
+      setFilteredMeters(filtered);
+    } else {
+      setFilteredMeters(meters);
+    }
+  }, [selectedProject, meters]);
+
   const [form, setForm] = useState<Omit<Meter, "id">>(emptyMeter);
   const [deviceForm, setDeviceForm] = useState<DeviceData>(emptyDeviceData);
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
@@ -117,12 +80,16 @@ export default function MeterManagement() {
     setLoadingMeters(true);
     try {
       const data = await fetchMeters();
+      const projectsArray = [...new Set(data.map((record) => record["areaName"]))];
+      setAllProjects(projectsArray);
       setMeters(data);
     } catch (error) {
       console.error("Error loading meters:", error);
+      setAllProjects([]);
       setMeters([]);
     } finally {
       setLoadingMeters(false);
+      setLoadingProjects(false);
     }
   };
 
@@ -144,16 +111,14 @@ export default function MeterManagement() {
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: boolean } = {};
 
+    // Required fields
     if (!form.meterName.trim()) newErrors["meterName"] = true;
     if (!form.meterSerialNumber.trim()) newErrors["meterSerialNumber"] = true;
     if (!form.areaName.trim()) newErrors["areaName"] = true;
     if (!form.deviceName.trim()) newErrors["deviceName"] = true;
-    if (!form.deviceType.trim()) newErrors["deviceType"] = true;
     if (!form.protocolType.trim()) newErrors["protocolType"] = true;
-    if (!form.supplyTypes.trim()) newErrors["supplyTypes"] = true;
-    if (!form.usageAnalysisType.trim()) newErrors["usageAnalysisType"] = true;
-    if (!form.installedTime) newErrors["installedTime"] = true;
 
+    // Device Configuration - Required
     if (!deviceForm["Device ID"] || deviceForm["Device ID"] === 0) {
       newErrors["Device ID"] = true;
     }
@@ -248,15 +213,6 @@ export default function MeterManagement() {
     setActiveMeter(null);
   };
 
-  /* ================= FILTER ================= */
-  const filtered = meters.filter(
-    (m) =>
-      (m.meterName.toLowerCase().includes(search.toLowerCase()) ||
-        m.meterSerialNumber.toLowerCase().includes(search.toLowerCase()) ||
-        m.deviceId.toLowerCase().includes(search.toLowerCase()) ||
-        m.areaName.toLowerCase().includes(search.toLowerCase()))
-  );
-
   /* ================= UI ================= */
   return (
     <div className="flex gap-6 p-6 w-full bg-gray-100">
@@ -270,22 +226,25 @@ export default function MeterManagement() {
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
           className="w-full border px-3 py-2 rounded"
-          disabled={loadingProjects || visibleProjects.length === 0}
+          disabled={loadingProjects || allProjects.length === 0}
         >
           {loadingProjects ? (
             <option>Loading projects...</option>
-          ) : visibleProjects.length === 0 ? (
+          ) : meters.length === 0 ? (
             <option>No projects available</option>
           ) : (
-            visibleProjects.map((proj) => (
-              <option key={proj} value={proj}>
-                {proj}
-              </option>
-            ))
+            <>
+              <option value="">Select a project</option>
+              {allProjects.map((proj) => (
+                <option key={proj} value={proj}>
+                  {proj}
+                </option>
+              ))}
+            </>
           )}
         </select>
 
-        {visibleProjects.length === 0 && !loadingProjects && (
+        {allProjects.length === 0 && !loadingProjects && (
           <p className="text-sm text-gray-500 mt-2">
             No projects available. Please contact your administrator.
           </p>
@@ -316,7 +275,7 @@ export default function MeterManagement() {
                 setEditingId(null);
                 setShowModal(true);
               }}
-              disabled={!selectedProject || visibleProjects.length === 0}
+              disabled={!selectedProject || allProjects.length === 0}
               className="flex items-center gap-2 px-4 py-2 bg-white text-[#4c5f9e] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={16} /> Add
@@ -387,32 +346,17 @@ export default function MeterManagement() {
           title="Meters"
           isLoading={loadingMeters}
           columns={[
-            { title: "Meter Name", field: "meterName" },
-            { title: "Serial Number", field: "meterSerialNumber" },
-            { title: "Area", field: "areaName" },
-            { title: "Device ID", field: "deviceId" },
-            { title: "Device Name", field: "deviceName" },
-            {
-              title: "Status",
-              field: "meterStatus",
-              render: (rowData) => (
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                    rowData.meterStatus === "Installed"
-                      ? "text-green-600 border-green-600"
-                      : "text-gray-600 border-gray-600"
-                  }`}
-                >
-                  {rowData.meterStatus}
-                </span>
-              ),
-            },
-            { title: "Protocol", field: "protocolType" },
-            { title: "Device Type", field: "deviceType" },
-            { title: "Created At", field: "createdAt", type: "datetime" },
-            { title: "Updated At", field: "updatedAt", type: "datetime" },
+            { title: "Area Name", field: "areaName", render: (rowData) => rowData.areaName || "-" },
+            { title: "Account Number", field: "accountNumber", render: (rowData) => rowData.accountNumber || "-" },
+            { title: "User Name", field: "userName", render: (rowData) => rowData.userName || "-" },
+            { title: "User Address", field: "userAddress", render: (rowData) => rowData.userAddress || "-" },
+            { title: "Meter S/N", field: "meterSerialNumber", render: (rowData) => rowData.meterSerialNumber || "-" },
+            { title: "Meter Name", field: "meterName", render: (rowData) => rowData.meterName || "-" },
+            { title: "Protocol Type", field: "protocolType", render: (rowData) => rowData.protocolType || "-" },
+            { title: "Device ID", field: "deviceId", render: (rowData) => rowData.deviceId || "-" },
+            { title: "Device Name", field: "deviceName", render: (rowData) => rowData.deviceName || "-" },
           ]}
-          data={filtered}
+          data={filteredMeters}
           onRowClick={(_, rowData) => setActiveMeter(rowData as Meter)}
           options={{
             actionsColumnIndex: -1,
@@ -453,6 +397,83 @@ export default function MeterManagement() {
           <div>
             <input
               className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors["areaName"] ? "border-red-500" : ""
+              }`}
+              placeholder="Area Name *"
+              value={form.areaName}
+              onChange={(e) => {
+                setForm({ ...form, areaName: e.target.value });
+                if (errors["areaName"]) {
+                  setErrors({ ...errors, "areaName": false });
+                }
+              }}
+              required
+            />
+            {errors["areaName"] && (
+              <p className="text-red-500 text-xs mt-1">This field is required</p>
+            )}
+          </div>
+
+          <div>
+            <input
+              className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Account Number (optional)"
+              value={form.accountNumber ?? ""}
+              onChange={(e) =>
+                setForm({ ...form, accountNumber: e.target.value || null })
+              }
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <input
+              className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="User Name (optional)"
+              value={form.userName ?? ""}
+              onChange={(e) =>
+                setForm({ ...form, userName: e.target.value || null })
+              }
+            />
+          </div>
+
+          <div>
+            <input
+              className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="User Address (optional)"
+              value={form.userAddress ?? ""}
+              onChange={(e) =>
+                setForm({ ...form, userAddress: e.target.value || null })
+              }
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <input
+              className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                errors["meterSerialNumber"] ? "border-red-500" : ""
+              }`}
+              placeholder="Meter S/N *"
+              value={form.meterSerialNumber}
+              onChange={(e) => {
+                setForm({ ...form, meterSerialNumber: e.target.value });
+                if (errors["meterSerialNumber"]) {
+                  setErrors({ ...errors, "meterSerialNumber": false });
+                }
+              }}
+              required
+            />
+            {errors["meterSerialNumber"] && (
+              <p className="text-red-500 text-xs mt-1">This field is required</p>
+            )}
+          </div>
+
+          <div>
+            <input
+              className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
                 errors["meterName"] ? "border-red-500" : ""
               }`}
               placeholder="Meter Name *"
@@ -469,100 +490,6 @@ export default function MeterManagement() {
               <p className="text-red-500 text-xs mt-1">This field is required</p>
             )}
           </div>
-
-          <div>
-            <input
-              className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors["meterSerialNumber"] ? "border-red-500" : ""
-              }`}
-              placeholder="Meter Serial Number *"
-              value={form.meterSerialNumber}
-              onChange={(e) => {
-                setForm({ ...form, meterSerialNumber: e.target.value });
-                if (errors["meterSerialNumber"]) {
-                  setErrors({ ...errors, "meterSerialNumber": false });
-                }
-              }}
-              required
-            />
-            {errors["meterSerialNumber"] && (
-              <p className="text-red-500 text-xs mt-1">This field is required</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <input
-            className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors["areaName"] ? "border-red-500" : ""
-            }`}
-            placeholder="Area Name *"
-            value={form.areaName}
-            onChange={(e) => {
-              setForm({ ...form, areaName: e.target.value });
-              if (errors["areaName"]) {
-                setErrors({ ...errors, "areaName": false });
-              }
-            }}
-            required
-          />
-          {errors["areaName"] && (
-            <p className="text-red-500 text-xs mt-1">This field is required</p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <input
-              className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors["deviceName"] ? "border-red-500" : ""
-              }`}
-              placeholder="Device Name *"
-              value={form.deviceName}
-              onChange={(e) => {
-                setForm({ ...form, deviceName: e.target.value });
-                if (errors["deviceName"]) {
-                  setErrors({ ...errors, "deviceName": false });
-                }
-              }}
-              required
-            />
-            {errors["deviceName"] && (
-              <p className="text-red-500 text-xs mt-1">This field is required</p>
-            )}
-          </div>
-
-          <div>
-            <input
-              className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors["deviceType"] ? "border-red-500" : ""
-              }`}
-              placeholder="Device Type *"
-              value={form.deviceType}
-              onChange={(e) => {
-                setForm({ ...form, deviceType: e.target.value });
-                if (errors["deviceType"]) {
-                  setErrors({ ...errors, "deviceType": false });
-                }
-              }}
-              required
-            />
-            {errors["deviceType"] && (
-              <p className="text-red-500 text-xs mt-1">This field is required</p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <select
-            className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            value={form.meterStatus}
-            onChange={(e) => setForm({ ...form, meterStatus: e.target.value })}
-          >
-            <option value="Installed">Installed</option>
-            <option value="Uninstalled">Uninstalled</option>
-            <option value="Maintenance">Maintenance</option>
-          </select>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -588,128 +515,34 @@ export default function MeterManagement() {
 
           <div>
             <input
-              className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors["supplyTypes"] ? "border-red-500" : ""
-              }`}
-              placeholder="Supply Types *"
-              value={form.supplyTypes}
-              onChange={(e) => {
-                setForm({ ...form, supplyTypes: e.target.value });
-                if (errors["supplyTypes"]) {
-                  setErrors({ ...errors, "supplyTypes": false });
-                }
-              }}
-              required
+              className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Device ID (optional)"
+              value={form.deviceId ?? ""}
+              onChange={(e) =>
+                setForm({ ...form, deviceId: e.target.value || "" })
+              }
             />
-            {errors["supplyTypes"] && (
-              <p className="text-red-500 text-xs mt-1">This field is required</p>
-            )}
           </div>
         </div>
 
         <div>
           <input
             className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors["usageAnalysisType"] ? "border-red-500" : ""
+              errors["deviceName"] ? "border-red-500" : ""
             }`}
-            placeholder="Usage Analysis Type *"
-            value={form.usageAnalysisType}
+            placeholder="Device Name *"
+            value={form.deviceName}
             onChange={(e) => {
-              setForm({ ...form, usageAnalysisType: e.target.value });
-              if (errors["usageAnalysisType"]) {
-                setErrors({ ...errors, "usageAnalysisType": false });
+              setForm({ ...form, deviceName: e.target.value });
+              if (errors["deviceName"]) {
+                setErrors({ ...errors, "deviceName": false });
               }
             }}
             required
           />
-          {errors["usageAnalysisType"] && (
+          {errors["deviceName"] && (
             <p className="text-red-500 text-xs mt-1">This field is required</p>
           )}
-        </div>
-
-        <div>
-          <input
-            type="datetime-local"
-            className={`w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors["installedTime"] ? "border-red-500" : ""
-            }`}
-            placeholder="Installed Time *"
-            value={
-              form.installedTime
-                ? new Date(form.installedTime).toISOString().slice(0, 16)
-                : ""
-            }
-            onChange={(e) => {
-              setForm({ ...form, installedTime: new Date(e.target.value).toISOString() });
-              if (errors["installedTime"]) {
-                setErrors({ ...errors, "installedTime": false });
-              }
-            }}
-            required
-          />
-          {errors["installedTime"] && (
-            <p className="text-red-500 text-xs mt-1">This field is required</p>
-          )}
-        </div>
-
-        <div className="pt-2 border-t">
-          <p className="text-xs text-gray-500 mb-2">Optional Fields</p>
-          
-          <div className="grid grid-cols-2 gap-3">
-            <input
-              className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Account Number (optional)"
-              value={form.accountNumber ?? ""}
-              onChange={(e) =>
-                setForm({ ...form, accountNumber: e.target.value || null })
-              }
-            />
-
-            <input
-              className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="User Name (optional)"
-              value={form.userName ?? ""}
-              onChange={(e) =>
-                setForm({ ...form, userName: e.target.value || null })
-              }
-            />
-          </div>
-
-          <input
-            className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent mt-3"
-            placeholder="User Address (optional)"
-            value={form.userAddress ?? ""}
-            onChange={(e) =>
-              setForm({ ...form, userAddress: e.target.value || null })
-            }
-          />
-
-          <div className="grid grid-cols-3 gap-3 mt-3">
-            <input
-              className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Price No. (optional)"
-              value={form.priceNo ?? ""}
-              onChange={(e) => setForm({ ...form, priceNo: e.target.value || null })}
-            />
-
-            <input
-              className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Price Name (optional)"
-              value={form.priceName ?? ""}
-              onChange={(e) =>
-                setForm({ ...form, priceName: e.target.value || null })
-              }
-            />
-
-            <input
-              className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="DMA Partition (optional)"
-              value={form.dmaPartition ?? ""}
-              onChange={(e) =>
-                setForm({ ...form, dmaPartition: e.target.value || null })
-              }
-            />
-          </div>
         </div>
       </div>
 

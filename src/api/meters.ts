@@ -64,10 +64,11 @@ export interface Meter {
 }
 
 export const fetchMeters = async (): Promise<Meter[]> => {
+  const pageSize = 9999;
   try {
-    const response = await fetch(METERS_API_URL, {
+    const response = await fetch(`${METERS_API_URL}?pageSize=${pageSize}`, {
       method: "GET",
-      headers: getAuthHeaders(),
+      headers: getAuthHeaders()
     });
 
     if (!response.ok) {
@@ -97,7 +98,6 @@ export const fetchMeters = async (): Promise<Meter[]> => {
       usageAnalysisType: r.fields["Usage Analysis Type"] || "",
       installedTime: r.fields["Installed Time"] || "",
     }));
-    console.log ("ans", ans);
 
     return ans;
   } catch (error) {
@@ -139,7 +139,9 @@ export const createMeter = async (
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to create meter: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to create meter: ${response.status} ${response.statusText}`
+      );
     }
 
     const data = await response.json();
@@ -154,22 +156,32 @@ export const createMeter = async (
       createdAt: createdRecord.fields.CreatedAt || meterData.createdAt,
       updatedAt: createdRecord.fields.UpdatedAt || meterData.updatedAt,
       areaName: createdRecord.fields["Area Name"] || meterData.areaName,
-      accountNumber: createdRecord.fields["Account Number"] || meterData.accountNumber,
+      accountNumber:
+        createdRecord.fields["Account Number"] || meterData.accountNumber,
       userName: createdRecord.fields["User Name"] || meterData.userName,
-      userAddress: createdRecord.fields["User Address"] || meterData.userAddress,
-      meterSerialNumber: createdRecord.fields["Meter S/N"] || meterData.meterSerialNumber,
+      userAddress:
+        createdRecord.fields["User Address"] || meterData.userAddress,
+      meterSerialNumber:
+        createdRecord.fields["Meter S/N"] || meterData.meterSerialNumber,
       meterName: createdRecord.fields["Meter Name"] || meterData.meterName,
-      meterStatus: createdRecord.fields["Meter Status"] || meterData.meterStatus,
-      protocolType: createdRecord.fields["Protocol Type"] || meterData.protocolType,
+      meterStatus:
+        createdRecord.fields["Meter Status"] || meterData.meterStatus,
+      protocolType:
+        createdRecord.fields["Protocol Type"] || meterData.protocolType,
       priceNo: createdRecord.fields["Price No."] || meterData.priceNo,
       priceName: createdRecord.fields["Price Name"] || meterData.priceName,
-      dmaPartition: createdRecord.fields["DMA Partition"] || meterData.dmaPartition,
-      supplyTypes: createdRecord.fields["Supply Types"] || meterData.supplyTypes,
+      dmaPartition:
+        createdRecord.fields["DMA Partition"] || meterData.dmaPartition,
+      supplyTypes:
+        createdRecord.fields["Supply Types"] || meterData.supplyTypes,
       deviceId: createdRecord.fields["Device ID"] || meterData.deviceId,
       deviceName: createdRecord.fields["Device Name"] || meterData.deviceName,
       deviceType: createdRecord.fields["Device Type"] || meterData.deviceType,
-      usageAnalysisType: createdRecord.fields["Usage Analysis Type"] || meterData.usageAnalysisType,
-      installedTime: createdRecord.fields["Installed Time"] || meterData.installedTime,
+      usageAnalysisType:
+        createdRecord.fields["Usage Analysis Type"] ||
+        meterData.usageAnalysisType,
+      installedTime:
+        createdRecord.fields["Installed Time"] || meterData.installedTime,
     };
   } catch (error) {
     console.error("Error creating meter:", error);
@@ -214,9 +226,13 @@ export const updateMeter = async (
     if (!response.ok) {
       if (response.status === 400) {
         const errorData = await response.json();
-        throw new Error(`Bad Request: ${errorData.msg || "Invalid data provided"}`);
+        throw new Error(
+          `Bad Request: ${errorData.msg || "Invalid data provided"}`
+        );
       }
-      throw new Error(`Failed to update meter: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to update meter: ${response.status} ${response.statusText}`
+      );
     }
 
     const data = await response.json();
@@ -231,22 +247,32 @@ export const updateMeter = async (
       createdAt: updatedRecord.fields.CreatedAt || meterData.createdAt,
       updatedAt: updatedRecord.fields.UpdatedAt || meterData.updatedAt,
       areaName: updatedRecord.fields["Area Name"] || meterData.areaName,
-      accountNumber: updatedRecord.fields["Account Number"] || meterData.accountNumber,
+      accountNumber:
+        updatedRecord.fields["Account Number"] || meterData.accountNumber,
       userName: updatedRecord.fields["User Name"] || meterData.userName,
-      userAddress: updatedRecord.fields["User Address"] || meterData.userAddress,
-      meterSerialNumber: updatedRecord.fields["Meter S/N"] || meterData.meterSerialNumber,
+      userAddress:
+        updatedRecord.fields["User Address"] || meterData.userAddress,
+      meterSerialNumber:
+        updatedRecord.fields["Meter S/N"] || meterData.meterSerialNumber,
       meterName: updatedRecord.fields["Meter Name"] || meterData.meterName,
-      meterStatus: updatedRecord.fields["Meter Status"] || meterData.meterStatus,
-      protocolType: updatedRecord.fields["Protocol Type"] || meterData.protocolType,
+      meterStatus:
+        updatedRecord.fields["Meter Status"] || meterData.meterStatus,
+      protocolType:
+        updatedRecord.fields["Protocol Type"] || meterData.protocolType,
       priceNo: updatedRecord.fields["Price No."] || meterData.priceNo,
       priceName: updatedRecord.fields["Price Name"] || meterData.priceName,
-      dmaPartition: updatedRecord.fields["DMA Partition"] || meterData.dmaPartition,
-      supplyTypes: updatedRecord.fields["Supply Types"] || meterData.supplyTypes,
+      dmaPartition:
+        updatedRecord.fields["DMA Partition"] || meterData.dmaPartition,
+      supplyTypes:
+        updatedRecord.fields["Supply Types"] || meterData.supplyTypes,
       deviceId: updatedRecord.fields["Device ID"] || meterData.deviceId,
       deviceName: updatedRecord.fields["Device Name"] || meterData.deviceName,
       deviceType: updatedRecord.fields["Device Type"] || meterData.deviceType,
-      usageAnalysisType: updatedRecord.fields["Usage Analysis Type"] || meterData.usageAnalysisType,
-      installedTime: updatedRecord.fields["Installed Time"] || meterData.installedTime,
+      usageAnalysisType:
+        updatedRecord.fields["Usage Analysis Type"] ||
+        meterData.usageAnalysisType,
+      installedTime:
+        updatedRecord.fields["Installed Time"] || meterData.installedTime,
     };
   } catch (error) {
     console.error("Error updating meter:", error);
@@ -267,9 +293,13 @@ export const deleteMeter = async (id: string): Promise<void> => {
     if (!response.ok) {
       if (response.status === 400) {
         const errorData = await response.json();
-        throw new Error(`Bad Request: ${errorData.msg || "Invalid data provided"}`);
+        throw new Error(
+          `Bad Request: ${errorData.msg || "Invalid data provided"}`
+        );
       }
-      throw new Error(`Failed to delete meter: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to delete meter: ${response.status} ${response.statusText}`
+      );
     }
   } catch (error) {
     console.error("Error deleting meter:", error);

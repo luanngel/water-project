@@ -19,13 +19,20 @@ export type Page =
 
 export default function App() {
   const [page, setPage] = useState<Page>("home");
+  const [subPage, setSubPage] = useState<string>("default");
+  const [selectedProject, setSelectedProject] = useState<string>("");
+
+  const navigateToMetersWithProject = (projectName: string) => {
+    setSelectedProject(projectName);
+    setPage("meters");
+  };
 
   const renderPage = () => {
     switch (page) {
       case "projects":
         return <ProjectsPage />;
       case "meters":
-        return <MetersPage />;
+        return <MetersPage selectedProject={selectedProject} />;
       case "concentrators":
         return <ConcentratorsPage />;
       case "users":
@@ -34,7 +41,7 @@ export default function App() {
         return <RolesPage />;
       case "home":
       default:
-        return <Home />;
+        return <Home setPage={setPage} navigateToMetersWithProject={navigateToMetersWithProject} />;
     }
   };
 
@@ -45,13 +52,13 @@ export default function App() {
       <div className="shrink-0">
         <Sidebar setPage={setPage} />
       </div>
-
+  
       {/* min-w-0: evita que páginas anchas (tablas) empujen el layout */}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="shrink-0">
-          <TopMenu />
+          <TopMenu page={page} subPage={subPage} setSubPage={setSubPage} />
         </div>
-
+  
         {/* Scroll solo aquí */}
         <main className="min-w-0 flex-1 overflow-auto">
           {renderPage()}
@@ -59,4 +66,4 @@ export default function App() {
       </div>
     </div>
   );
-}
+}  

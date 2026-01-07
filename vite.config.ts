@@ -11,6 +11,7 @@ export default defineConfig({
       "localhost",
       "127.0.0.1",
       "reyna-compressive-shaunna.ngrok-free.dev",
+      "https://sistema.gestionrecursoshidricos.com/"
     ],
     port: 5173,
   },

@@ -1,5 +1,5 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-export const PROJECTS_API_URL = `${API_BASE_URL}/api/v3/data/ppfu31vhv5gf6i0/m05u6wpquvdbv3c/records`;
+export const PROJECTS_API_URL = `${API_BASE_URL}/api/v3/data/pirzzp3t8kclgo3/m9882vn3xb31e29/records`;
 const API_TOKEN = import.meta.env.VITE_API_TOKEN;
 
 export const getAuthHeaders = () => ({
@@ -125,7 +125,6 @@ export const createProject = async (
         Operator: projectData.operator,
         "Installed Time": projectData.installedTime,
         "Communication Time": projectData.communicationTime,
-        "Instruction Manual": projectData.instructionManual,
       },
     }),
   });
@@ -184,7 +183,6 @@ export const updateProject = async (
         Operator: projectData.operator,
         "Installed Time": projectData.installedTime,
         "Communication Time": projectData.communicationTime,
-        "Instruction Manual": projectData.instructionManual,
       },
     }),
   });

@@ -1,5 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export const PROJECTS_API_URL = `${API_BASE_URL}/api/v3/data/pirzzp3t8kclgo3/m9882vn3xb31e29/records`;
+export const PROJECTS_API_URL = `${API_BASE_URL}/api/v3/data/pirzzp3t8kclgo3/m9882vn3xb31e29/records`;
 const API_TOKEN = import.meta.env.VITE_API_TOKEN;
 
 export const getAuthHeaders = () => ({

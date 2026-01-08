@@ -28,7 +28,6 @@ export default function ProjectsPage() {
     operator: "",
     installedTime: "",
     communicationTime: "",
-    instructionManual: "",
   };
 
   const [form, setForm] = useState<Omit<Project, "id">>(emptyProject);
@@ -149,7 +148,6 @@ export default function ProjectsPage() {
                   operator: activeProject.operator,
                   installedTime: activeProject.installedTime,
                   communicationTime: activeProject.communicationTime,
-                  instructionManual: activeProject.instructionManual,
                 });
                 setShowModal(true);
               }}
@@ -210,8 +208,7 @@ export default function ProjectsPage() {
             },
             { title: "Operator", field: "operator" },
             { title: "Installed Time", field: "installedTime" },
-            { title: "Communication Time", field: "communicationTime" },
-            { title: "Instruction Manual", field: "instructionManual" },
+            { title: "Communication Name", field: "communicationTime" },
           ]}
           data={filtered}
           onRowClick={(_, rowData) => setActiveProject(rowData as Project)}
@@ -294,15 +291,6 @@ export default function ProjectsPage() {
               value={form.communicationTime}
               onChange={(e) =>
                 setForm({ ...form, communicationTime: e.target.value })
-              }
-            />
-
-            <input
-              className="w-full border px-3 py-2 rounded"
-              placeholder="Instruction Manual"
-              value={form.instructionManual}
-              onChange={(e) =>
-                setForm({ ...form, instructionManual: e.target.value })
               }
             />
 

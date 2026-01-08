@@ -11,14 +11,14 @@ export const getAuthHeaders = () => ({
 export interface ProjectRecord {
   id: number;
   fields: {
-    "Area name"?: string;
+    "Area Name"?: string;
     "Device S/N"?: string;
     "Device Name"?: string;
     "Device Type"?: string;
     "Device Status"?: string;
     Operator?: string;
     "Installed Time"?: string;
-    "Communication Time"?: string;
+    "Communication time"?: string;
     "Instruction Manual"?: string | null;
   };
 }
@@ -41,7 +41,6 @@ export interface Project {
   operator: string;
   installedTime: string;
   communicationTime: string;
-  instructionManual: string;
 }
 
 export const fetchProjectNames = async (): Promise<string[]> => {
@@ -65,7 +64,7 @@ export const fetchProjectNames = async (): Promise<string[]> => {
     const projectNames = [
       ...new Set(
         data.records
-          .map((record) => record.fields["Area name"] || "")
+          .map((record) => record.fields["Area Name"] || "")
           .filter((name) => name)
       ),
     ];
@@ -79,7 +78,10 @@ export const fetchProjectNames = async (): Promise<string[]> => {
 
 export const fetchProjects = async (): Promise<Project[]> => {
   try {
-    const response = await fetch(PROJECTS_API_URL, {
+    const url = new URL(PROJECTS_API_URL);
+    url.searchParams.set('viewId', 'vwrrxvlzlxi7jfe7');
+
+    const response = await fetch(url.toString(), {
       method: "GET",
       headers: getAuthHeaders(),
     });
@@ -92,7 +94,7 @@ export const fetchProjects = async (): Promise<Project[]> => {
 
     return data.records.map((r: ProjectRecord) => ({
       id: r.id.toString(),
-      areaName: r.fields["Area name"] ?? "",
+      areaName: r.fields["Area Name"] ?? "",
       deviceSN: r.fields["Device S/N"] ?? "",
       deviceName: r.fields["Device Name"] ?? "",
       deviceType: r.fields["Device Type"] ?? "",
@@ -100,8 +102,8 @@ export const fetchProjects = async (): Promise<Project[]> => {
         r.fields["Device Status"] === "Installed" ? "ACTIVE" : "INACTIVE",
       operator: r.fields["Operator"] ?? "",
       installedTime: r.fields["Installed Time"] ?? "",
-      communicationTime: r.fields["Communication Time"] ?? "",
-      instructionManual: r.fields["Instruction Manual"] ?? "",
+      communicationTime: r.fields["Communication time"] ?? "",
+      instructionManual: "",
     }));
   } catch (error) {
     console.error("Error fetching projects:", error);
@@ -117,7 +119,7 @@ export const createProject = async (
     headers: getAuthHeaders(),
     body: JSON.stringify({
       fields: {
-        "Area name": projectData.areaName,
+        "Area Name": projectData.areaName,
         "Device S/N": projectData.deviceSN,
         "Device Name": projectData.deviceName,
         "Device Type": projectData.deviceType,
@@ -125,7 +127,7 @@ export const createProject = async (
           projectData.deviceStatus === "ACTIVE" ? "Installed" : "Inactive",
         Operator: projectData.operator,
         "Installed Time": projectData.installedTime,
-        "Communication Time": projectData.communicationTime,
+        "Communication time": projectData.communicationTime,
       },
     }),
   });
@@ -145,7 +147,7 @@ export const createProject = async (
 
   return {
     id: createdRecord.id.toString(),
-    areaName: createdRecord.fields["Area name"] ?? projectData.areaName,
+    areaName: createdRecord.fields["Area Name"] ?? projectData.areaName,
     deviceSN: createdRecord.fields["Device S/N"] ?? projectData.deviceSN,
     deviceName: createdRecord.fields["Device Name"] ?? projectData.deviceName,
     deviceType: createdRecord.fields["Device Type"] ?? projectData.deviceType,
@@ -157,11 +159,8 @@ export const createProject = async (
     installedTime:
       createdRecord.fields["Installed Time"] ?? projectData.installedTime,
     communicationTime:
-      createdRecord.fields["Communication Time"] ??
+      createdRecord.fields["Communication time"] ??
       projectData.communicationTime,
-    instructionManual:
-      createdRecord.fields["Instruction Manual"] ??
-      projectData.instructionManual,
   };
 };
 
@@ -175,7 +174,7 @@ export const updateProject = async (
     body: JSON.stringify({
       id: parseInt(id),
       fields: {
-        "Area name": projectData.areaName,
+        "Area Name": projectData.areaName,
         "Device S/N": projectData.deviceSN,
         "Device Name": projectData.deviceName,
         "Device Type": projectData.deviceType,
@@ -183,7 +182,7 @@ export const updateProject = async (
           projectData.deviceStatus === "ACTIVE" ? "Installed" : "Inactive",
         Operator: projectData.operator,
         "Installed Time": projectData.installedTime,
-        "Communication Time": projectData.communicationTime,
+        "Communication time": projectData.communicationTime,
       },
     }),
   });
@@ -209,7 +208,7 @@ export const updateProject = async (
 
   return {
     id: updatedRecord.id.toString(),
-    areaName: updatedRecord.fields["Area name"] ?? projectData.areaName,
+    areaName: updatedRecord.fields["Area Name"] ?? projectData.areaName,
     deviceSN: updatedRecord.fields["Device S/N"] ?? projectData.deviceSN,
     deviceName: updatedRecord.fields["Device Name"] ?? projectData.deviceName,
     deviceType: updatedRecord.fields["Device Type"] ?? projectData.deviceType,
@@ -221,11 +220,8 @@ export const updateProject = async (
     installedTime:
       updatedRecord.fields["Installed Time"] ?? projectData.installedTime,
     communicationTime:
-      updatedRecord.fields["Communication Time"] ??
+      updatedRecord.fields["Communication time"] ??
       projectData.communicationTime,
-    instructionManual:
-      updatedRecord.fields["Instruction Manual"] ??
-      projectData.instructionManual,
   };
 };
 

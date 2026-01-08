@@ -45,7 +45,11 @@ export interface Concentrator {
 
 export const fetchConcentrators = async (): Promise<Concentrator[]> => {
   try {
-    const response = await fetch(CONCENTRATORS_API_URL, {
+    const url = new URL(CONCENTRATORS_API_URL);
+    url.searchParams.set('viewId', 'vw93mj98ylyxratm');
+
+    
+    const response = await fetch(url.toString(), {
       method: "GET",
       headers: getAuthHeaders(),
     });

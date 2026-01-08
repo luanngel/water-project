@@ -533,7 +533,7 @@ export default function MeterManagement({
         {/* SEARCH */}
         <input
           className="bg-white rounded-lg shadow px-4 py-2 text-sm"
-          placeholder="Search by meter name, serial number, device ID, or area..."
+          placeholder="Search by meter name, serial number, device ID, area, or device type..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           disabled={!selectedProject}

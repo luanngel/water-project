@@ -28,7 +28,7 @@ export interface MeterRecord {
     "Device Name": string;
     "Device Type": string;
     "Usage Analysis Type": string;
-    "Installed Time": string;
+    "installed Time": string;
   };
 }
 
@@ -66,7 +66,11 @@ export interface Meter {
 export const fetchMeters = async (): Promise<Meter[]> => {
   const pageSize = 9999;
   try {
-    const response = await fetch(`${METERS_API_URL}?pageSize=${pageSize}`, {
+    const url = new URL(METERS_API_URL);
+    url.searchParams.set('viewId', 'vwo7tqwu8fi6ie83');
+    url.searchParams.set('pageSize', pageSize.toString());
+
+    const response = await fetch(url.toString(), {
       method: "GET",
       headers: getAuthHeaders()
     });
@@ -96,7 +100,7 @@ export const fetchMeters = async (): Promise<Meter[]> => {
       deviceName: r.fields["Device Name"] || "",
       deviceType: r.fields["Device Type"] || "",
       usageAnalysisType: r.fields["Usage Analysis Type"] || "",
-      installedTime: r.fields["Installed Time"] || "",
+      installedTime: r.fields["installed Time"] || "",
     }));
 
     return ans;

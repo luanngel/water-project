@@ -4,8 +4,7 @@ const API_TOKEN = import.meta.env.VITE_API_TOKEN;
 
 export const getAuthHeaders = () => ({
   "Content-Type": "application/json",
-  "xc-token": API_TOKEN,                 // NocoDB style
-  Authorization: `Bearer ${API_TOKEN}`,  // fallback por si el backend usa Bearer
+  Authorization: `Bearer ${API_TOKEN}`,
 });
 
 export interface ProjectRecord {

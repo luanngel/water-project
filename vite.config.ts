@@ -11,13 +11,13 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
-    host: '127.0.0.1',
+    host: true,
     port: 5173,
     allowedHosts: [
       "localhost",
       "127.0.0.1",
       "reyna-compressive-shaunna.ngrok-free.dev",
-      "https://sistema.gestionrecursoshidricos.com/"
+      "sistema.gestionrecursoshidricos.com"
     ],
     // proxy:{
     //   '/api':{

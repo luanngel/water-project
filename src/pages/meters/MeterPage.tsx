@@ -533,7 +533,7 @@ export default function MeterManagement({
         {/* SEARCH */}
         <input
           className="bg-white rounded-lg shadow px-4 py-2 text-sm"
-          placeholder="Search by meter name, serial number, device ID, area, or device type..."
+          placeholder="Search by meter name, serial number, device ID, area, device type, or meter status..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           disabled={!selectedProject}
@@ -549,21 +549,6 @@ export default function MeterManagement({
                 title: "Area Name",
                 field: "areaName",
                 render: (rowData) => rowData.areaName || "-",
-              },
-              {
-                title: "Account Number",
-                field: "accountNumber",
-                render: (rowData) => rowData.accountNumber || "-",
-              },
-              {
-                title: "User Name",
-                field: "userName",
-                render: (rowData) => rowData.userName || "-",
-              },
-              {
-                title: "User Address",
-                field: "userAddress",
-                render: (rowData) => rowData.userAddress || "-",
               },
               {
                 title: "Meter S/N",
@@ -589,6 +574,21 @@ export default function MeterManagement({
                 title: "Device Name",
                 field: "deviceName",
                 render: (rowData) => rowData.deviceName || "-",
+              },
+              {
+                title: "Device Type",
+                field: "deviceType",
+                render: (rowData) => rowData.deviceType || "-",
+              },
+              {
+                title: "Meter Status",
+                field: "meterStatus",
+                render: (rowData) => rowData.meterStatus || "-",
+              },
+              {
+                title: "Installed Time",
+                field: "installedTime",
+                render: (rowData) => rowData.installedTime || "-",
               },
             ]}
             data={searchFiltered}

@@ -17,12 +17,6 @@ export default defineConfig({
       'localhost',
       'sistema.gestionrecursoshidricos.com',
     ],
-    hmr: {
-      protocol: 'wss',
-      host: 'sistema.gestionrecursoshidricos.com',
-      clientPort: 443,
-      overlay: true,
-    },
     // proxy:{
     //   '/api':{
     //     target: 'http://localhost:4000/',

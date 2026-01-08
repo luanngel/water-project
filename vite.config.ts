@@ -11,13 +11,16 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
-    host: true,
+    host: '127.0.0.1',
     port: 5173,
     allowedHosts: [
       'localhost',
       'sistema.gestionrecursoshidricos.com',
     ],
     hmr: {
+      protocol: 'wss',
+      host: 'sistema.gestionrecursoshidricos.com',
+      clientPort: 443,
       overlay: true,
     },
     // proxy:{

@@ -14,8 +14,10 @@ export default defineConfig({
     host: '127.0.0.1',
     port: 5173,
     allowedHosts: [
-      'localhost',
-      'sistema.gestionrecursoshidricos.com',
+      "localhost",
+      "127.0.0.1",
+      "reyna-compressive-shaunna.ngrok-free.dev",
+      "https://sistema.gestionrecursoshidricos.com/"
     ],
     // proxy:{
     //   '/api':{

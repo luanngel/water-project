@@ -1,5 +1,5 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-export const CONCENTRATORS_API_URL = `${API_BASE_URL}/api/v3/data/ppfu31vhv5gf6i0/mqqvi3woqdw5ziq/records`;
+export const CONCENTRATORS_API_URL = `${API_BASE_URL}/api/v3/data/pirzzp3t8kclgo3/mheif1vdgnyt8x2/records`;
 const API_TOKEN = import.meta.env.VITE_API_TOKEN;
 
 const getAuthHeaders = () => ({

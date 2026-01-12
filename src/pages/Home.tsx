@@ -11,7 +11,7 @@ import {
 } from "recharts";
 import { fetchMeters, type Meter } from "../api/meters";
 import type { Page } from "../App";
-import grhWatermark from "../assets/images/grhWatermark.jpg";
+import grhWatermark from "../assets/images/grhWatermark.png";
 
 /* ================= TYPES ================= */
 

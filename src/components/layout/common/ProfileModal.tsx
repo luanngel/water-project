@@ -54,12 +54,17 @@ export default function ProfileModal({
   // Limpieza de object URLs
   useEffect(() => {
     return () => {
-      if (lastPreviewUrlRef.current) URL.revokeObjectURL(lastPreviewUrlRef.current);
+      if (lastPreviewUrlRef.current) {
+        URL.revokeObjectURL(lastPreviewUrlRef.current);
+      }
     };
   }, []);
 
   const initials = useMemo(() => {
-    const parts = (name || "").trim().split(/\s+/).filter(Boolean);
+    const parts = (name || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
     const a = parts[0]?.[0] ?? "U";
     const b = parts[1]?.[0] ?? "";
     return (a + b).toUpperCase();
@@ -148,7 +153,9 @@ export default function ProfileModal({
         <div className="rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden">
           {/* Header */}
           <div className="px-6 py-4 border-b border-slate-200">
-            <div className="text-base font-semibold text-slate-900">Editar perfil</div>
+            <div className="text-base font-semibold text-slate-900">
+              Editar perfil
+            </div>
           </div>
 
           {/* Body */}
@@ -206,7 +213,6 @@ export default function ProfileModal({
 
               {/* RIGHT: Form */}
               <div className="rounded-2xl border border-slate-200 p-5">
-                {/* “correo electronico” como en tu dibujo */}
                 <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
                   correo electrónico
                 </div>
@@ -253,20 +259,20 @@ export default function ProfileModal({
             >
               Cancelar
             </button>
-            <button
-  type="button"
-  onClick={handleSubmit}
-  disabled={loading}
-  className={[
-    "rounded-xl px-4 py-2 text-sm font-semibold",
-    "bg-blue-600 text-white hover:bg-blue-700",
-    "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-    loading ? "opacity-60 cursor-not-allowed" : "",
-  ].join(" ")}
->
-  {loading ? "Guardando..." : "Guardar"}
-</button>
 
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={loading}
+              className={[
+                "rounded-xl px-4 py-2 text-sm font-semibold",
+                "bg-blue-600 text-white hover:bg-blue-700",
+                "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+                loading ? "opacity-60 cursor-not-allowed" : "",
+              ].join(" ")}
+            >
+              {loading ? "Guardando..." : "Guardar"}
+            </button>
           </div>
         </div>
       </div>

@@ -10,8 +10,10 @@ interface TopMenuProps {
   userEmail?: string;
   avatarUrl?: string | null;
 
-  onLogout?: () => void;
   onOpenProfile?: () => void;
+
+  // ✅ NUEVO: en vez de cerrar, pedimos confirmación desde App
+  onRequestLogout?: () => void;
 }
 
 const TopMenu: React.FC<TopMenuProps> = ({
@@ -23,11 +25,10 @@ const TopMenu: React.FC<TopMenuProps> = ({
   userEmail,
   avatarUrl = null,
 
-  onLogout,
   onOpenProfile,
+  onRequestLogout,
 }) => {
   const [openUserMenu, setOpenUserMenu] = useState(false);
-
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   const initials = useMemo(() => {
@@ -37,7 +38,6 @@ const TopMenu: React.FC<TopMenuProps> = ({
     return (a + b).toUpperCase();
   }, [userName]);
 
-  // Cerrar al click afuera
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (!openUserMenu) return;
@@ -48,7 +48,6 @@ const TopMenu: React.FC<TopMenuProps> = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openUserMenu]);
 
-  // Cerrar con ESC
   useEffect(() => {
     function handleEsc(e: KeyboardEvent) {
       if (e.key === "Escape") setOpenUserMenu(false);
@@ -117,12 +116,8 @@ const TopMenu: React.FC<TopMenuProps> = ({
               role="menu"
               className="
                 absolute right-0 mt-2 w-80
-                rounded-2xl
-                bg-white
-                border border-slate-200
-                shadow-xl
-                overflow-hidden
-                z-50
+                rounded-2xl bg-white border border-slate-200
+                shadow-xl overflow-hidden z-50
               "
             >
               {/* Header usuario */}
@@ -157,7 +152,6 @@ const TopMenu: React.FC<TopMenuProps> = ({
                 </div>
               </div>
 
-              {/* Items (solo 2) */}
               <MenuItem
                 label="Ver / editar perfil"
                 onClick={() => {
@@ -174,11 +168,7 @@ const TopMenu: React.FC<TopMenuProps> = ({
                 tone="danger"
                 onClick={() => {
                   setOpenUserMenu(false);
-                  if (onLogout) onLogout();
-                  else {
-                    localStorage.removeItem("token");
-                    window.location.href = "/login";
-                  }
+                  onRequestLogout?.(); // ✅ abre confirm modal en App
                 }}
                 left={<LogOut size={16} />}
               />
@@ -225,4 +215,3 @@ function MenuItem({
 }
 
 export default TopMenu;
-

@@ -9,12 +9,18 @@ import ProjectsPage from "./pages/projects/ProjectsPage";
 import UsersPage from "./pages/UsersPage";
 import RolesPage from "./pages/RolesPage";
 import ProfileModal from "./components/layout/common/ProfileModal";
-import { uploadMyAvatar, updateMyProfile } from "./api/me";
+import { updateMyProfile } from "./api/me";
 
 import SettingsModal, {
   type AppSettings,
   loadSettings,
 } from "./components/SettingsModals";
+
+import LoginPage from "./pages/LoginPage";
+
+// ✅ NUEVO
+import ConfirmModal from "./components/layout/common/ConfirmModal";
+import Watermark from "./components/layout/common/Watermark";
 
 export type Page =
   | "home"
@@ -24,12 +30,38 @@ export type Page =
   | "users"
   | "roles";
 
+const AUTH_KEY = "grh_auth";
+
 export default function App() {
+  const [isAuth, setIsAuth] = useState<boolean>(() => {
+    return Boolean(localStorage.getItem(AUTH_KEY));
+  });
+
+  const handleLogin = (payload?: { token?: string }) => {
+    localStorage.setItem(
+      AUTH_KEY,
+      JSON.stringify({ token: payload?.token ?? "demo", ts: Date.now() })
+    );
+    setIsAuth(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem(AUTH_KEY);
+    setIsAuth(false);
+    // opcional: reset de navegación
+    setPage("home");
+    setSubPage("default");
+    setSelectedProject("");
+  };
+
+  // ✅ confirm logout modal state
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+
   const [page, setPage] = useState<Page>("home");
   const [subPage, setSubPage] = useState<string>("default");
   const [selectedProject, setSelectedProject] = useState<string>("");
 
-  // ✅ perfil usuario + modal
   const [profileOpen, setProfileOpen] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -37,29 +69,24 @@ export default function App() {
     name: "CESPT Admin",
     email: "admin@cespt.gob.mx",
     avatarUrl: null as string | null,
-    organismName: "CESPT", // ✅ NUEVO: Empresa/Organismo
+    organismName: "CESPT",
   });
 
-  // Settings state
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [settings, setSettings] = useState<AppSettings>(() => loadSettings());
 
   const navigateToMetersWithProject = (projectName: string) => {
     setSelectedProject(projectName);
-    setSubPage(projectName); // útil para breadcrumb si lo usas
+    setSubPage(projectName);
     setPage("meters");
   };
 
-  // ✅ handlers
   const handleUploadAvatar = async (file: File) => {
-    // 1) Guardar como base64 en localStorage (demo)
     const base64 = await fileToBase64(file);
-    localStorage.setItem("mock_avatar", base64 as string);
-  
-    // 2) Guardar en state para que se vea inmediato
-    setUser((prev) => ({ ...prev, avatarUrl: base64 as string }));
+    localStorage.setItem("mock_avatar", base64);
+    setUser((prev) => ({ ...prev, avatarUrl: base64 }));
   };
-  
+
   function fileToBase64(file: File) {
     return new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -69,7 +96,6 @@ export default function App() {
     });
   }
 
-  // ✅ ahora también recibe organismName
   const handleSaveProfile = async (next: {
     name: string;
     email: string;
@@ -81,11 +107,11 @@ export default function App() {
 
       setUser((prev) => ({
         ...prev,
-        // si backend regresa valores, los usamos; si no, usamos "next" o lo anterior
         name: updated.name ?? next.name ?? prev.name,
         email: updated.email ?? next.email ?? prev.email,
         avatarUrl: updated.avatarUrl ?? prev.avatarUrl,
-        organismName: updated.organismName ?? next.organismName ?? prev.organismName,
+        organismName:
+          updated.organismName ?? next.organismName ?? prev.organismName,
       }));
 
       setProfileOpen(false);
@@ -94,7 +120,6 @@ export default function App() {
     }
   };
 
-  // Aplica theme al cargar / cambiar (para cubrir refresh)
   useEffect(() => {
     const root = document.documentElement;
     root.classList.remove("dark");
@@ -134,15 +159,17 @@ export default function App() {
     }
   };
 
+  if (!isAuth) {
+    return <LoginPage onSuccess={handleLogin} />;
+  }
+
   return (
-    // Blindaje global del layout
     <div
       className={[
         "flex h-screen w-full overflow-hidden",
         settings.compactMode ? "text-sm" : "",
       ].join(" ")}
     >
-      {/* Sidebar no debe encogerse */}
       <div className="shrink-0">
         <Sidebar
           setPage={(p) => {
@@ -153,29 +180,28 @@ export default function App() {
         />
       </div>
 
-      {/* min-w-0: evita que páginas anchas (tablas) empujen el layout */}
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="shrink-0">
           <TopMenu
             page={page}
             subPage={subPage}
             setSubPage={setSubPage}
-            setPage={setPage}
-            onOpenSettings={() => setSettingsOpen(true)}
-            // props de perfil
             userName={user.name}
             userEmail={user.email}
             avatarUrl={user.avatarUrl}
             onOpenProfile={() => setProfileOpen(true)}
-            onUploadAvatar={handleUploadAvatar}
+            // ✅ en vez de cerrar, abrimos confirm modal
+            onRequestLogout={() => setLogoutOpen(true)}
           />
         </div>
 
-        {/* Scroll solo aquí */}
-        <main className="min-w-0 flex-1 overflow-auto">{renderPage()}</main>
+        {/* ✅ AQUÍ VA LA MARCA DE AGUA */}
+        <main className="relative min-w-0 flex-1 overflow-auto">
+          <Watermark />
+          <div className="relative z-10">{renderPage()}</div>
+        </main>
       </div>
 
-      {/* Settings modal */}
       <SettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
@@ -183,19 +209,39 @@ export default function App() {
         setSettings={setSettings}
       />
 
-      {/* ✅ Profile modal (con avatar + cambiar img + empresa) */}
       <ProfileModal
         open={profileOpen}
         loading={savingProfile}
-        avatarUrl={user.avatarUrl} // ✅ NUEVO
+        avatarUrl={user.avatarUrl}
         initial={{
           name: user.name,
           email: user.email,
-          organismName: user.organismName, // ✅ NUEVO
+          organismName: user.organismName,
         }}
         onClose={() => setProfileOpen(false)}
         onSave={handleSaveProfile}
-        onUploadAvatar={handleUploadAvatar} // ✅ NUEVO (botón Cambiar img en modal)
+        onUploadAvatar={handleUploadAvatar}
+      />
+
+      {/* ✅ ConfirmModal: Cerrar sesión */}
+      <ConfirmModal
+        open={logoutOpen}
+        title="Cerrar sesión"
+        message="¿Estás seguro que deseas cerrar sesión?"
+        confirmText="Cerrar sesión"
+        cancelText="Cancelar"
+        danger
+        loading={loggingOut}
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={async () => {
+          setLoggingOut(true);
+          try {
+            handleLogout();
+            setLogoutOpen(false);
+          } finally {
+            setLoggingOut(false);
+          }
+        }}
       />
     </div>
   );

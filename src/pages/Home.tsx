@@ -270,15 +270,15 @@ export default function Home({
           </div>
 
           {showOrganisms && (
-            <div className="fixed inset-0 z-50">
-              {/* Overlay */}
-              <div
-                className="absolute inset-0 bg-black/40"
-                onClick={() => {
-                  setShowOrganisms(false);
-                  setOrganismQuery("");
-                }}
-              />
+  <div className="fixed inset-0 z-30">
+    {/* Overlay */}
+    <div
+      className="absolute inset-0 bg-black/40"
+      onClick={() => {
+        setShowOrganisms(false);
+        setOrganismQuery("");
+      }}
+    />
 
               {/* Panel */}
               <div className="absolute right-0 top-0 h-full w-full sm:w-[520px] bg-white shadow-2xl flex flex-col">

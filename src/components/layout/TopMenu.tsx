@@ -58,7 +58,7 @@ const TopMenu: React.FC<TopMenuProps> = ({
 
   return (
     <header
-      className="relative z-40 h-14 shrink-0 flex items-center justify-between px-4 text-white"
+       className="relative z-20 h-14 shrink-0 flex items-center justify-between px-4 text-white"
       style={{
         background:
           "linear-gradient(135deg, #4c5f9e, #2a355d, #566bb8, #3d4e87)",
